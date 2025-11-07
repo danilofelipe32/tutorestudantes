@@ -2,7 +2,7 @@
 import React from 'react';
 import type { Subject } from '../types';
 import { Screen } from '../types';
-import { ArrowLeftIcon, ChatBubbleIcon, PencilIcon, InfoIcon, ChevronRightIcon } from './Icons';
+import { ArrowLeftIcon, ChatBubbleIcon, PencilIcon, InfoIcon, ChevronRightIcon, ClockIcon } from './Icons';
 
 interface SubjectDetailProps {
   subject: Subject;
@@ -47,6 +47,22 @@ const SubjectDetail: React.FC<SubjectDetailProps> = ({ subject, onNavigateTo, on
                     <div className="ml-4 text-left">
                         <p className="font-semibold text-gray-800">Conversar com Tutor</p>
                         <p className="text-sm text-gray-500">Tire suas dúvidas com um tutor inteligente</p>
+                    </div>
+                </div>
+                <ChevronRightIcon className="h-5 w-5 text-gray-400" />
+            </button>
+
+            <button
+                onClick={() => onNavigateTo(Screen.STUDY_SESSION)}
+                className="w-full flex items-center justify-between p-5 bg-gray-100 rounded-2xl border border-gray-200 hover:bg-gray-200 transition-colors"
+            >
+                <div className="flex items-center">
+                     <div className="p-3 bg-orange-500 rounded-xl">
+                        <ClockIcon className="h-6 w-6 text-white"/>
+                    </div>
+                    <div className="ml-4 text-left">
+                        <p className="font-semibold text-gray-800">Sessão de Estudo</p>
+                        <p className="text-sm text-gray-500">Foco total com timer (Pomodoro)</p>
                     </div>
                 </div>
                 <ChevronRightIcon className="h-5 w-5 text-gray-400" />

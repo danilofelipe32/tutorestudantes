@@ -1,3 +1,4 @@
+
 import type { ComponentType } from 'react';
 
 export enum Screen {
@@ -5,6 +6,7 @@ export enum Screen {
   SUBJECT_DETAIL,
   TUTOR_CHAT,
   EXERCISE,
+  STUDY_SESSION,
 }
 
 export interface Subject {
