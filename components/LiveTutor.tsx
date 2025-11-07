@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-// FIX: Remove non-exported member 'LiveSession' from import.
 import { GoogleGenAI, LiveServerMessage, Modality } from '@google/genai';
 import type { Subject } from '../types';
 import { ArrowLeftIcon, MicrophoneIcon, MicrophoneSlashIcon, SpeakerWaveIcon, SpeakerXMarkIcon } from './Icons';
 import { createBlob, decode, decodeAudioData } from '../services/audioUtils';
 
-// FIX: Initialize GoogleGenAI with API key from environment variables.
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Chave de API para fase de testes
+const ai = new GoogleGenAI({ apiKey: "COLOQUE_SUA_CHAVE_AQUI" });
 
 interface LiveTutorProps {
   subject: Subject;
@@ -22,7 +21,7 @@ const LiveTutor: React.FC<LiveTutorProps> = ({ subject, onBack }) => {
   const [isMuted, setIsMuted] = useState(false);
   const [volume, setVolume] = useState(1); // 0 to 1
 
-  // FIX: Use 'any' for LiveSession type as it is not exported from the library.
+  // Usa 'any' para o tipo de sessão, já que 'LiveSession' não é exportado.
   const sessionPromiseRef = useRef<Promise<any> | null>(null);
   const inputAudioContextRef = useRef<AudioContext | null>(null);
   const outputAudioContextRef = useRef<AudioContext | null>(null);
