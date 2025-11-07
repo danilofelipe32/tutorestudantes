@@ -1,9 +1,6 @@
-
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import type { Subject } from '../types';
-// FIX: Corrected icon imports by removing icons that are not exported from './Icons'. Only ChevronRightIcon and BellIcon are used in this file.
-import { ChevronRightIcon, BellIcon } from './Icons';
+import { ChevronRightIcon, BellIcon, LightBulbIcon } from './Icons';
 import { getAllLearningData, SubjectLearningData } from '../services/learningService';
 import { subjects } from '../data/subjects';
 import { requestNotificationPermission } from '../services/notificationService';
@@ -67,6 +64,7 @@ const SubjectList: React.FC<SubjectListProps> = ({ onSelectSubject }) => {
   const [reviewSubjects, setReviewSubjects] = useState<Subject[]>([]);
   const [otherSubjects, setOtherSubjects] = useState<Subject[]>([]);
   const [permission, setPermission] = useState<NotificationPermission>('default');
+  const [suggestion, setSuggestion] = useState<{ subject: Subject; reason: string; cta: string } | null>(null);
 
 
   useEffect(() => {
@@ -93,6 +91,39 @@ const SubjectList: React.FC<SubjectListProps> = ({ onSelectSubject }) => {
 
     setReviewSubjects(toReview);
     setOtherSubjects(others);
+
+    // Lógica de sugestão
+    const subjectsWithData = subjects
+      .map(subject => ({
+        subject,
+        data: data[subject.id],
+        accuracy: data[subject.id] && data[subject.id].totalExercises > 0 
+                  ? (data[subject.id].correctAnswers / data[subject.id].totalExercises) * 100 
+                  : -1,
+      }))
+      .filter(item => item.data && item.data.totalExercises >= 5); // Considera apenas matérias com 5+ exercícios
+
+    if (subjectsWithData.length > 0) {
+      subjectsWithData.sort((a, b) => a.accuracy - b.accuracy);
+      const weakestSubject = subjectsWithData[0];
+      
+      if (weakestSubject.accuracy < 75) {
+        setSuggestion({
+          subject: weakestSubject.subject,
+          reason: 'Vimos que você pode melhorar aqui!',
+          cta: 'Revisar ' + weakestSubject.subject.name,
+        });
+      } else {
+        subjectsWithData.sort((a, b) => (b.data?.totalExercises ?? 0) - (a.data?.totalExercises ?? 0));
+        const strongestSubject = subjectsWithData[0];
+        setSuggestion({
+          subject: strongestSubject.subject,
+          reason: 'Você está indo muito bem!',
+          cta: 'Aprofundar em ' + strongestSubject.subject.name,
+        });
+      }
+    }
+
   }, []);
 
   const handleRequestPermission = async () => {
@@ -156,7 +187,6 @@ const SubjectList: React.FC<SubjectListProps> = ({ onSelectSubject }) => {
                 <h2 className="text-2xl font-bold text-gray-800 mb-4">Para Revisar Hoje</h2>
                 <div className="space-y-4">
                     {reviewSubjects.map((subject) => {
-// FIX: Safely access properties on potentially undefined learning data using optional chaining.
                         const data = learningData[subject.id];
                         const stats = {
                             totalExercises: data?.totalExercises || 0,
@@ -182,7 +212,6 @@ const SubjectList: React.FC<SubjectListProps> = ({ onSelectSubject }) => {
             </h2>
             <div className="space-y-4">
                 {otherSubjects.map((subject) => {
-// FIX: Safely access properties on potentially undefined learning data using optional chaining.
                     const data = learningData[subject.id];
                      const stats = {
                         totalExercises: data?.totalExercises || 0,
@@ -200,6 +229,32 @@ const SubjectList: React.FC<SubjectListProps> = ({ onSelectSubject }) => {
                 })}
             </div>
         </div>
+        
+        {suggestion && (
+          <div className="mt-8">
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">Sugestão para Você</h2>
+            <div className="p-5 rounded-2xl bg-blue-50 border border-blue-200">
+              <div className="flex items-start">
+                  <div className="p-2 bg-blue-100 rounded-full mr-4">
+                    <LightBulbIcon className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg text-gray-800">{suggestion.reason}</h3>
+                    <p className="text-gray-600 mt-1">
+                        Que tal focar em <span className="font-semibold">{suggestion.subject.name}</span> agora?
+                    </p>
+                  </div>
+              </div>
+              <button
+                  onClick={() => onSelectSubject(suggestion.subject)}
+                  className="w-full mt-4 flex items-center justify-center p-3 bg-blue-500 text-white rounded-xl font-semibold hover:bg-blue-600 transition-colors"
+                >
+                  {suggestion.cta}
+                  <ChevronRightIcon className="h-5 w-5 ml-2" />
+                </button>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
