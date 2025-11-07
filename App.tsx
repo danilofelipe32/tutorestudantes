@@ -1,15 +1,23 @@
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import type { Subject } from './types';
 import { Screen } from './types';
 import SubjectList from './components/SubjectList';
 import SubjectDetail from './components/SubjectDetail';
 import TutorChat from './components/TutorChat';
 import Exercise from './components/Exercise';
+import { setupNotificationChecks } from './services/notificationService';
 
 const App: React.FC = () => {
   const [screen, setScreen] = useState<Screen>(Screen.SUBJECT_LIST);
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
+
+  useEffect(() => {
+    // Configura o verificador de notificações quando o aplicativo é carregado.
+    // Isso só será executado se a permissão já tiver sido concedida.
+    // A solicitação de permissão é tratada no componente SubjectList.
+    setupNotificationChecks();
+  }, []);
 
   const handleSelectSubject = useCallback((subject: Subject) => {
     setSelectedSubject(subject);
