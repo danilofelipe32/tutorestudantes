@@ -34,7 +34,11 @@ export const getChatHistoryForSubject = (subjectId: string): ChatHistoryItem[] =
 };
 
 export const saveChatHistory = (subjectId: string, messages: Message[]) => {
-  if (messages.length <= 2) return; // Não salva conversas sem interação do usuário
+  // Apenas salva a conversa se houver pelo menos uma mensagem do usuário.
+  // (A primeira mensagem é sempre do bot, então > 1 significa que o usuário interagiu)
+  if (messages.length <= 1 || !messages.some(m => m.sender === 'user')) {
+    return;
+  }
 
   const allHistory = getAllChatHistory();
   const subjectHistory = allHistory[subjectId] || [];

@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import type { Subject, Message } from '../types';
 import { getTutorResponse } from '../services/geminiService';
@@ -13,9 +12,28 @@ interface TutorChatProps {
 }
 
 const TutorChat: React.FC<TutorChatProps> = ({ subject, onBack, learningGoal, learningStyle }) => {
-  const [messages, setMessages] = useState<Message[]>([
-    { id: '1', text: `Olá! Eu sou seu tutor de ${subject.name}. Estou aqui para ajudar você a aprender e tirar suas dúvidas. Como posso ajudar você hoje?`, sender: 'bot' }
-  ]);
+  const [messages, setMessages] = useState<Message[]>(() => {
+    let baseText = `Olá! Eu sou seu tutor de ${subject.name}.`;
+    let hasCustomization = false;
+
+    if (learningGoal) {
+      baseText += ` Vamos focar no seu objetivo de "${learningGoal}".`;
+      hasCustomization = true;
+    }
+
+    if (learningStyle) {
+      baseText += ` E vou adaptar minhas explicações para um estilo mais ${learningStyle.toLowerCase()}.`;
+      hasCustomization = true;
+    }
+
+    if (hasCustomization) {
+      baseText += ' Como posso te ajudar a começar?';
+    } else {
+      baseText += ' Sobre o que você gostaria de conversar hoje?';
+    }
+    
+    return [{ id: '1', text: baseText, sender: 'bot' }];
+  });
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -49,7 +67,10 @@ const TutorChat: React.FC<TutorChatProps> = ({ subject, onBack, learningGoal, le
   }, [input, isLoading, messages, subject, learningGoal, learningStyle]);
 
   const handleBack = () => {
-    saveChatHistory(subject.id, messages);
+    // Apenas salva o histórico se houver mais do que a mensagem inicial e uma resposta.
+    if (messages.length > 2) {
+      saveChatHistory(subject.id, messages);
+    }
     onBack();
   };
 
