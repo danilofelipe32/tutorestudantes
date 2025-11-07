@@ -12,6 +12,8 @@ import { setupNotificationChecks } from './services/notificationService';
 const App: React.FC = () => {
   const [screen, setScreen] = useState<Screen>(Screen.SUBJECT_LIST);
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
+  const [learningGoal, setLearningGoal] = useState<string>('');
+  const [learningStyle, setLearningStyle] = useState<string>('');
 
   useEffect(() => {
     // Configura o verificador de notificações quando o aplicativo é carregado.
@@ -25,7 +27,11 @@ const App: React.FC = () => {
     setScreen(Screen.SUBJECT_DETAIL);
   }, []);
 
-  const handleNavigateTo = useCallback((newScreen: Screen) => {
+  const handleNavigateTo = useCallback((newScreen: Screen, options?: { goal?: string; style?: string }) => {
+    if (options) {
+      setLearningGoal(options.goal || '');
+      setLearningStyle(options.style || '');
+    }
     setScreen(newScreen);
   }, []);
 
@@ -35,6 +41,8 @@ const App: React.FC = () => {
     } else if (screen === Screen.SUBJECT_DETAIL) {
       setScreen(Screen.SUBJECT_LIST);
       setSelectedSubject(null);
+      setLearningGoal('');
+      setLearningStyle('');
     }
   }, [screen]);
 
@@ -55,7 +63,14 @@ const App: React.FC = () => {
         return <SubjectList onSelectSubject={handleSelectSubject} />; // Fallback
       case Screen.TUTOR_CHAT:
         if (selectedSubject) {
-          return <TutorChat subject={selectedSubject} onBack={handleBack} />;
+          return (
+            <TutorChat 
+              subject={selectedSubject} 
+              onBack={handleBack} 
+              learningGoal={learningGoal}
+              learningStyle={learningStyle}
+            />
+          );
         }
         return <SubjectList onSelectSubject={handleSelectSubject} />; // Fallback
       case Screen.EXERCISE:

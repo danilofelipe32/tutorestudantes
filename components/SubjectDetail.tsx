@@ -1,18 +1,19 @@
 
-import React from 'react';
+import React, {useState} from 'react';
 import type { Subject } from '../types';
 import { Screen } from '../types';
 import { ArrowLeftIcon, ChatBubbleIcon, PencilIcon, InfoIcon, ChevronRightIcon, ClockIcon } from './Icons';
 
 interface SubjectDetailProps {
   subject: Subject;
-  onNavigateTo: (screen: Screen) => void;
+  onNavigateTo: (screen: Screen, options?: { goal?: string; style?: string }) => void;
   onBack: () => void;
 }
 
 const SubjectDetail: React.FC<SubjectDetailProps> = ({ subject, onNavigateTo, onBack }) => {
-  const bgColor = subject.color.replace('bg-', '');
-  
+  const [learningGoal, setLearningGoal] = useState('');
+  const [learningStyle, setLearningStyle] = useState('');
+
   return (
     <div className="flex flex-col h-screen">
       <header className={`p-6 text-white ${subject.color} rounded-b-3xl`}>
@@ -32,12 +33,12 @@ const SubjectDetail: React.FC<SubjectDetailProps> = ({ subject, onNavigateTo, on
         </div>
       </header>
       
-      <main className="p-6 flex-grow bg-white">
+      <main className="p-6 flex-grow bg-white overflow-y-auto">
         <h2 className="text-xl font-bold text-gray-800 mb-4">Como você quer estudar?</h2>
         
         <div className="space-y-4">
             <button 
-                onClick={() => onNavigateTo(Screen.TUTOR_CHAT)}
+                onClick={() => onNavigateTo(Screen.TUTOR_CHAT, { goal: learningGoal, style: learningStyle })}
                 className="w-full flex items-center justify-between p-5 bg-gray-100 rounded-2xl border border-gray-200 hover:bg-gray-200 transition-colors"
             >
                 <div className="flex items-center">
@@ -84,12 +85,48 @@ const SubjectDetail: React.FC<SubjectDetailProps> = ({ subject, onNavigateTo, on
                 <ChevronRightIcon className="h-5 w-5 text-gray-400" />
             </button>
         </div>
+        
+        {/* Seção de Personalização */}
+        <div className="mt-8 pt-6 border-t border-gray-200">
+            <h3 className="text-lg font-bold text-gray-800 mb-4">Personalize sua sessão</h3>
+            <div className="space-y-4">
+                <div>
+                    <label htmlFor="learning-goal" className="block text-sm font-medium text-gray-700 mb-1">Objetivo de aprendizado (opcional)</label>
+                    <input
+                        id="learning-goal"
+                        type="text"
+                        value={learningGoal}
+                        onChange={(e) => setLearningGoal(e.target.value)}
+                        placeholder="Ex: Entender a 2ª Lei de Newton"
+                        className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    />
+                </div>
+                <div>
+                     <label className="block text-sm font-medium text-gray-700 mb-2">Estilo de aprendizado (opcional)</label>
+                     <div className="grid grid-cols-3 gap-2">
+                        {['Visual', 'Auditivo', 'Cinestésico'].map(style => (
+                            <button
+                            key={style}
+                            onClick={() => setLearningStyle(prev => prev === style ? '' : style)}
+                            className={`py-2 px-2 text-sm rounded-md font-semibold transition-colors border-2 ${
+                                learningStyle === style
+                                ? `${subject.color.replace('bg-', 'border-').replace('brand', 'blue-500')} ${subject.color.replace('bg-','bg-')}/10 text-${subject.color.replace('bg-', '')}-700`
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border-transparent'
+                            }`}
+                            >
+                            {style}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-2xl flex items-start">
             <InfoIcon className="h-6 w-6 text-blue-500 flex-shrink-0 mt-1" />
             <div className="ml-3">
                 <h4 className="font-semibold text-blue-800">Dica</h4>
-                <p className="text-sm text-blue-700">Converse com o tutor sempre que tiver dúvidas. Depois, pratique com exercícios para fixar o conteúdo!</p>
+                <p className="text-sm text-blue-700">Personalize sua sessão antes de conversar com o tutor para uma ajuda mais focada!</p>
             </div>
         </div>
       </main>
