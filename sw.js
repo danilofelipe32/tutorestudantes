@@ -18,9 +18,11 @@ const URLS_TO_CACHE = [
   '/components/TutorChat.tsx',
   '/components/StudySession.tsx',
   '/components/ChatHistory.tsx',
+  '/components/LiveTutor.tsx',
   '/services/learningService.ts',
   '/services/chatHistoryService.ts',
   '/services/notificationService.ts',
+  '/services/audioUtils.ts',
   // O serviço gemini é necessário mesmo offline para conter a lógica de fallback
   '/services/geminiService.ts'
 ];

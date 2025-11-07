@@ -3,7 +3,7 @@ import React, {useState, useEffect} from 'react';
 import type { Subject } from '../types';
 import { Screen } from '../types';
 import { getChatHistoryForSubject } from '../services/chatHistoryService';
-import { ArrowLeftIcon, ChatBubbleIcon, PencilIcon, InfoIcon, ChevronRightIcon, ClockIcon, ArchiveBoxIcon } from './Icons';
+import { ArrowLeftIcon, ChatBubbleIcon, PencilIcon, InfoIcon, ChevronRightIcon, ClockIcon, ArchiveBoxIcon, MicrophoneIcon } from './Icons';
 
 interface SubjectDetailProps {
   subject: Subject;
@@ -29,6 +29,14 @@ const SubjectDetail: React.FC<SubjectDetailProps> = ({ subject, onNavigateTo, on
       title: 'Conversar com Tutor',
       subtitle: 'Tire suas dúvidas com um tutor inteligente',
       options: { goal: learningGoal, style: learningStyle },
+      show: true
+    },
+    {
+      screen: Screen.LIVE_TUTOR,
+      icon: MicrophoneIcon,
+      iconBg: 'bg-red-500',
+      title: 'Conversar por Voz',
+      subtitle: 'Interaja com o tutor em tempo real',
       show: true
     },
     {
