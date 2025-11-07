@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import type { Subject, ExerciseQuestion, Difficulty } from '../types';
 import { generateExercise } from '../services/geminiService';
@@ -23,6 +24,7 @@ const Exercise: React.FC<ExerciseProps> = ({ subject, onBack }) => {
   const [error, setError] = useState<string | null>(null);
   const [difficulty, setDifficulty] = useState<Difficulty>('Fácil');
   const [isReviewMode, setIsReviewMode] = useState(false);
+  const [showExplanation, setShowExplanation] = useState(false);
 
   const fetchQuestion = useCallback(async () => {
     setLoading(true);
@@ -30,6 +32,7 @@ const Exercise: React.FC<ExerciseProps> = ({ subject, onBack }) => {
     setSelectedOptionId(null);
     setQuestion(null);
     setError(null);
+    setShowExplanation(false); // Reseta a visibilidade da explicação
 
     const learningData = getLearningDataForSubject(subject.id);
     const needsReview = learningData.nextReviewDate > 0 && Date.now() >= learningData.nextReviewDate;
@@ -121,11 +124,24 @@ const Exercise: React.FC<ExerciseProps> = ({ subject, onBack }) => {
             </div>
 
             {isVerified && (
-              <div className={`mt-6 p-4 rounded-lg ${selectedOptionId === question.correctOptionId ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'} border`}>
-                <h3 className={`font-bold ${selectedOptionId === question.correctOptionId ? 'text-green-800' : 'text-red-800'}`}>
-                  {selectedOptionId === question.correctOptionId ? 'Resposta Correta!' : 'Resposta Incorreta.'}
-                </h3>
-                <p className="mt-2 text-sm text-gray-700">{question.explanation}</p>
+              <div className="mt-6 space-y-4">
+                <div className={`p-4 rounded-lg ${selectedOptionId === question.correctOptionId ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'} border`}>
+                  <h3 className={`font-bold ${selectedOptionId === question.correctOptionId ? 'text-green-800' : 'text-red-800'}`}>
+                    {selectedOptionId === question.correctOptionId ? 'Resposta Correta!' : 'Resposta Incorreta.'}
+                  </h3>
+                  {showExplanation && (
+                    <p className="mt-2 text-sm text-gray-700">{question.explanation}</p>
+                  )}
+                </div>
+
+                {!showExplanation && (
+                  <button
+                    onClick={() => setShowExplanation(true)}
+                    className="w-full bg-gray-200 text-gray-800 font-semibold py-3 rounded-xl hover:bg-gray-300 transition-colors"
+                  >
+                    Explicar Resposta
+                  </button>
+                )}
               </div>
             )}
           </div>
