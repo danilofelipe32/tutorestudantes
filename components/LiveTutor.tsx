@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { GoogleGenAI, LiveSession, LiveServerMessage, Modality } from '@google/genai';
+// FIX: Remove non-exported member 'LiveSession' from import.
+import { GoogleGenAI, LiveServerMessage, Modality } from '@google/genai';
 import type { Subject } from '../types';
-import { ArrowLeftIcon, MicrophoneIcon } from './Icons';
+import { ArrowLeftIcon, MicrophoneIcon, MicrophoneSlashIcon, SpeakerWaveIcon, SpeakerXMarkIcon } from './Icons';
 import { createBlob, decode, decodeAudioData } from '../services/audioUtils';
 
-// Hardcoded API Key as requested
-const API_KEY = "AIzaSyA8z9gxOEp2usOFToxGQV0z7rWtiya2L9o";
-const ai = new GoogleGenAI({ apiKey: API_KEY });
+// FIX: Initialize GoogleGenAI with API key from environment variables.
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 interface LiveTutorProps {
   subject: Subject;
@@ -19,14 +19,23 @@ const LiveTutor: React.FC<LiveTutorProps> = ({ subject, onBack }) => {
   const [status, setStatus] = useState<SessionStatus>('IDLE');
   const [isBotSpeaking, setIsBotSpeaking] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isMuted, setIsMuted] = useState(false);
+  const [volume, setVolume] = useState(1); // 0 to 1
 
-  const sessionPromiseRef = useRef<Promise<LiveSession> | null>(null);
+  // FIX: Use 'any' for LiveSession type as it is not exported from the library.
+  const sessionPromiseRef = useRef<Promise<any> | null>(null);
   const inputAudioContextRef = useRef<AudioContext | null>(null);
   const outputAudioContextRef = useRef<AudioContext | null>(null);
+  const outputGainNodeRef = useRef<GainNode | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const scriptProcessorRef = useRef<ScriptProcessorNode | null>(null);
   const sourcesRef = useRef<Set<AudioBufferSourceNode>>(new Set());
   const nextStartTimeRef = useRef<number>(0);
+  const isMutedRef = useRef(isMuted);
+
+  useEffect(() => {
+    isMutedRef.current = isMuted;
+  }, [isMuted]);
 
   const stopAllAudio = useCallback(() => {
     sourcesRef.current.forEach(source => {
@@ -52,6 +61,10 @@ const LiveTutor: React.FC<LiveTutorProps> = ({ subject, onBack }) => {
     if (scriptProcessorRef.current) {
         scriptProcessorRef.current.disconnect();
         scriptProcessorRef.current = null;
+    }
+    if (outputGainNodeRef.current) {
+        outputGainNodeRef.current.disconnect();
+        outputGainNodeRef.current = null;
     }
     if (inputAudioContextRef.current && inputAudioContextRef.current.state !== 'closed') {
       inputAudioContextRef.current.close().catch(e => console.error("Error closing input context:", e));
@@ -81,10 +94,12 @@ const LiveTutor: React.FC<LiveTutorProps> = ({ subject, onBack }) => {
       return;
     }
 
-    // FIX: Use a compatible AudioContext for cross-browser support, satisfying TypeScript.
     const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
     inputAudioContextRef.current = new AudioContext({ sampleRate: 16000 });
     outputAudioContextRef.current = new AudioContext({ sampleRate: 24000 });
+    outputGainNodeRef.current = outputAudioContextRef.current.createGain();
+    outputGainNodeRef.current.gain.value = volume;
+    outputGainNodeRef.current.connect(outputAudioContextRef.current.destination);
     nextStartTimeRef.current = 0;
     
     sessionPromiseRef.current = ai.live.connect({
@@ -106,6 +121,7 @@ const LiveTutor: React.FC<LiveTutorProps> = ({ subject, onBack }) => {
           scriptProcessorRef.current = inputAudioContextRef.current.createScriptProcessor(4096, 1, 1);
           
           scriptProcessorRef.current.onaudioprocess = (audioProcessingEvent) => {
+            if (isMutedRef.current) return;
             const inputData = audioProcessingEvent.inputBuffer.getChannelData(0);
             const pcmBlob = createBlob(inputData);
             if(sessionPromiseRef.current) {
@@ -123,14 +139,14 @@ const LiveTutor: React.FC<LiveTutorProps> = ({ subject, onBack }) => {
           if (base64Audio) {
             setIsBotSpeaking(true);
             const outputContext = outputAudioContextRef.current;
-            if (!outputContext) return;
+            if (!outputContext || !outputGainNodeRef.current) return;
             
             nextStartTimeRef.current = Math.max(nextStartTimeRef.current, outputContext.currentTime);
 
             const audioBuffer = await decodeAudioData(decode(base64Audio), outputContext, 24000, 1);
             const source = outputContext.createBufferSource();
             source.buffer = audioBuffer;
-            source.connect(outputContext.destination);
+            source.connect(outputGainNodeRef.current);
 
             source.addEventListener('ended', () => {
                 sourcesRef.current.delete(source);
@@ -161,10 +177,9 @@ const LiveTutor: React.FC<LiveTutorProps> = ({ subject, onBack }) => {
         },
       },
     });
-  }, [subject.name, status, cleanup, stopAllAudio]);
+  }, [subject.name, status, cleanup, stopAllAudio, volume]);
 
   useEffect(() => {
-    // Cleanup on component unmount
     return () => {
       cleanup();
     };
@@ -175,6 +190,26 @@ const LiveTutor: React.FC<LiveTutorProps> = ({ subject, onBack }) => {
       startSession();
     } else {
       cleanup();
+    }
+  };
+
+  const handleToggleMute = () => {
+    setIsMuted(prev => !prev);
+  };
+
+  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newVolume = parseFloat(e.target.value);
+    setVolume(newVolume);
+    if (outputGainNodeRef.current) {
+      outputGainNodeRef.current.gain.value = newVolume;
+    }
+  };
+
+  const handleToggleVolume = () => {
+    const newVolume = volume > 0 ? 0 : 1;
+    setVolume(newVolume);
+    if (outputGainNodeRef.current) {
+        outputGainNodeRef.current.gain.value = newVolume;
     }
   };
 
@@ -229,7 +264,35 @@ const LiveTutor: React.FC<LiveTutorProps> = ({ subject, onBack }) => {
         {error && <p className="mt-2 text-red-500">{error}</p>}
       </main>
 
-      <footer className="p-4 bg-white border-t border-gray-200">
+      <footer className="p-4 bg-white border-t border-gray-200 space-y-4">
+        {status === 'CONNECTED' && (
+            <div className="flex items-center justify-between animate-fade-in space-x-4">
+                <button
+                    onClick={handleToggleMute}
+                    className={`p-4 rounded-full transition-colors ${
+                        isMuted ? 'bg-red-100 text-red-600' : 'bg-gray-200 text-gray-700'
+                    }`}
+                >
+                    {isMuted ? <MicrophoneSlashIcon className="h-6 w-6"/> : <MicrophoneIcon className="h-6 w-6"/>}
+                </button>
+                
+                <div className="flex-grow flex items-center">
+                    <button onClick={handleToggleVolume} className="p-2 mr-2">
+                        {volume > 0 ? <SpeakerWaveIcon className="h-6 w-6 text-gray-600"/> : <SpeakerXMarkIcon className="h-6 w-6 text-gray-600"/>}
+                    </button>
+                    <input
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.05"
+                        value={volume}
+                        onChange={handleVolumeChange}
+                        className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                    />
+                </div>
+            </div>
+        )}
+
         <button
             onClick={handleMainButtonClick}
             className={`w-full font-semibold py-3 rounded-xl transition-colors

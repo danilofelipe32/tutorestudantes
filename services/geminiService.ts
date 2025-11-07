@@ -3,8 +3,8 @@ import { GoogleGenAI, Type } from "@google/genai";
 import type { Subject, ExerciseQuestion } from '../types';
 import { offlineExercises } from '../data/offlineExercises';
 
-// A chave de API é inserida diretamente para a fase de testes.
-const ai = new GoogleGenAI({ apiKey: "AIzaSyA8z9gxOEp2usOFToxGQV0z7rWtiya2L9o" });
+// FIX: Initialize GoogleGenAI with API key from environment variables.
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 export const getTutorResponse = async (
   subject: Subject,
