@@ -95,7 +95,9 @@ const TutorChat: React.FC<TutorChatProps> = ({ subject, onBack, learningGoal, le
       <main className="flex-grow p-4 overflow-y-auto">
         <div className="space-y-4">
           {messages.map((msg) => (
-            <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+            <div key={msg.id} className={`flex ${
+              msg.sender === 'user' ? 'justify-end animate-chat-user' : 'justify-start animate-chat-bot'
+            }`}>
               <div className={`max-w-xs md:max-w-md px-4 py-3 rounded-2xl ${
                 msg.sender === 'user' ? 'bg-blue-500 text-white rounded-br-lg' : 'bg-gray-200 text-gray-800 rounded-bl-lg'
               }`}>

@@ -21,6 +21,42 @@ const SubjectDetail: React.FC<SubjectDetailProps> = ({ subject, onNavigateTo, on
     setHasHistory(history.length > 0);
   }, [subject.id]);
 
+  const actionButtons = [
+    {
+      screen: Screen.TUTOR_CHAT,
+      icon: ChatBubbleIcon,
+      iconBg: 'bg-blue-500',
+      title: 'Conversar com Tutor',
+      subtitle: 'Tire suas dúvidas com um tutor inteligente',
+      options: { goal: learningGoal, style: learningStyle },
+      show: true
+    },
+    {
+      screen: Screen.STUDY_SESSION,
+      icon: ClockIcon,
+      iconBg: 'bg-orange-500',
+      title: 'Sessão de Estudo',
+      subtitle: 'Foco total com timer (Pomodoro)',
+      show: true
+    },
+    {
+      screen: Screen.EXERCISE,
+      icon: PencilIcon,
+      iconBg: 'bg-green-500',
+      title: 'Fazer Exercícios',
+      subtitle: 'Pratique com exercícios interativos',
+      show: true
+    },
+    {
+      screen: Screen.CHAT_HISTORY,
+      icon: ArchiveBoxIcon,
+      iconBg: 'bg-purple-500',
+      title: 'Histórico de Conversas',
+      subtitle: 'Reveja seus bate-papos anteriores',
+      show: hasHistory
+    }
+  ];
+
   return (
     <div className="flex flex-col h-screen">
       <header className={`p-6 text-white ${subject.color} rounded-b-3xl`}>
@@ -44,71 +80,25 @@ const SubjectDetail: React.FC<SubjectDetailProps> = ({ subject, onNavigateTo, on
         <h2 className="text-xl font-bold text-gray-800 mb-4">Como você quer estudar?</h2>
         
         <div className="space-y-4">
+          {actionButtons.filter(btn => btn.show).map((button, index) => (
             <button 
-                onClick={() => onNavigateTo(Screen.TUTOR_CHAT, { goal: learningGoal, style: learningStyle })}
-                className="w-full flex items-center justify-between p-5 bg-gray-100 rounded-2xl border border-gray-200 hover:bg-gray-200 transition-colors"
+              key={button.title}
+              onClick={() => onNavigateTo(button.screen, button.options)}
+              className="w-full flex items-center justify-between p-5 bg-gray-100 rounded-2xl border border-gray-200 hover:bg-gray-200 transition-colors animate-fade-in-up"
+              style={{ animationDelay: `${index * 100}ms` }}
             >
-                <div className="flex items-center">
-                    <div className="p-3 bg-blue-500 rounded-xl">
-                        <ChatBubbleIcon className="h-6 w-6 text-white"/>
-                    </div>
-                    <div className="ml-4 text-left">
-                        <p className="font-semibold text-gray-800">Conversar com Tutor</p>
-                        <p className="text-sm text-gray-500">Tire suas dúvidas com um tutor inteligente</p>
-                    </div>
-                </div>
-                <ChevronRightIcon className="h-5 w-5 text-gray-400" />
-            </button>
-
-            <button
-                onClick={() => onNavigateTo(Screen.STUDY_SESSION)}
-                className="w-full flex items-center justify-between p-5 bg-gray-100 rounded-2xl border border-gray-200 hover:bg-gray-200 transition-colors"
-            >
-                <div className="flex items-center">
-                     <div className="p-3 bg-orange-500 rounded-xl">
-                        <ClockIcon className="h-6 w-6 text-white"/>
-                    </div>
-                    <div className="ml-4 text-left">
-                        <p className="font-semibold text-gray-800">Sessão de Estudo</p>
-                        <p className="text-sm text-gray-500">Foco total com timer (Pomodoro)</p>
-                    </div>
-                </div>
-                <ChevronRightIcon className="h-5 w-5 text-gray-400" />
-            </button>
-
-            <button 
-                onClick={() => onNavigateTo(Screen.EXERCISE)}
-                className="w-full flex items-center justify-between p-5 bg-gray-100 rounded-2xl border border-gray-200 hover:bg-gray-200 transition-colors"
-            >
-                <div className="flex items-center">
-                     <div className="p-3 bg-green-500 rounded-xl">
-                        <PencilIcon className="h-6 w-6 text-white"/>
-                    </div>
-                    <div className="ml-4 text-left">
-                        <p className="font-semibold text-gray-800">Fazer Exercícios</p>
-                        <p className="text-sm text-gray-500">Pratique com exercícios interativos</p>
-                    </div>
-                </div>
-                <ChevronRightIcon className="h-5 w-5 text-gray-400" />
-            </button>
-
-            {hasHistory && (
-              <button 
-                  onClick={() => onNavigateTo(Screen.CHAT_HISTORY)}
-                  className="w-full flex items-center justify-between p-5 bg-gray-100 rounded-2xl border border-gray-200 hover:bg-gray-200 transition-colors"
-              >
-                  <div className="flex items-center">
-                      <div className="p-3 bg-purple-500 rounded-xl">
-                          <ArchiveBoxIcon className="h-6 w-6 text-white"/>
-                      </div>
-                      <div className="ml-4 text-left">
-                          <p className="font-semibold text-gray-800">Histórico de Conversas</p>
-                          <p className="text-sm text-gray-500">Reveja seus bate-papos anteriores</p>
-                      </div>
+              <div className="flex items-center">
+                  <div className={`p-3 ${button.iconBg} rounded-xl`}>
+                      <button.icon className="h-6 w-6 text-white"/>
                   </div>
-                  <ChevronRightIcon className="h-5 w-5 text-gray-400" />
-              </button>
-            )}
+                  <div className="ml-4 text-left">
+                      <p className="font-semibold text-gray-800">{button.title}</p>
+                      <p className="text-sm text-gray-500">{button.subtitle}</p>
+                  </div>
+              </div>
+              <ChevronRightIcon className="h-5 w-5 text-gray-400" />
+            </button>
+          ))}
         </div>
         
         {/* Seção de Personalização */}

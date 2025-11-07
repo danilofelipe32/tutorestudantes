@@ -96,8 +96,10 @@ const App: React.FC = () => {
 
   return (
     <div className="w-full min-h-screen bg-gray-50 font-sans">
-      <div className="max-w-md mx-auto bg-white min-h-screen shadow-lg">
-        {renderScreen()}
+      <div className="max-w-md mx-auto bg-white min-h-screen shadow-lg overflow-hidden relative">
+        <div key={screen} className="animate-fade-in">
+          {renderScreen()}
+        </div>
       </div>
     </div>
   );

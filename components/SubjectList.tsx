@@ -14,7 +14,8 @@ const SubjectCard: React.FC<{
     onClick: () => void;
     needsReview: boolean;
     stats: { totalExercises: number; correctAnswers: number };
-}> = ({ subject, onClick, needsReview, stats }) => {
+    style?: React.CSSProperties;
+}> = ({ subject, onClick, needsReview, stats, style }) => {
     const accuracy = stats.totalExercises > 0
         ? Math.round((stats.correctAnswers / stats.totalExercises) * 100)
         : 0;
@@ -22,7 +23,8 @@ const SubjectCard: React.FC<{
     return (
         <button
             onClick={onClick}
-            className={`w-full p-5 rounded-2xl text-white shadow-md transition-transform hover:scale-105 ${subject.color} relative overflow-hidden`}
+            className={`w-full p-5 rounded-2xl text-white shadow-md transition-transform hover:scale-105 ${subject.color} relative overflow-hidden animate-fade-in-up`}
+            style={style}
         >
             {needsReview && (
                 <div className="absolute top-2 right-2 flex items-center bg-white/25 text-white text-xs font-bold px-2 py-1 rounded-full">
@@ -186,7 +188,7 @@ const SubjectList: React.FC<SubjectListProps> = ({ onSelectSubject }) => {
             <div className="mb-8">
                 <h2 className="text-2xl font-bold text-gray-800 mb-4">Para Revisar Hoje</h2>
                 <div className="space-y-4">
-                    {reviewSubjects.map((subject) => {
+                    {reviewSubjects.map((subject, index) => {
                         const data = learningData[subject.id];
                         const stats = {
                             totalExercises: data?.totalExercises || 0,
@@ -199,6 +201,7 @@ const SubjectList: React.FC<SubjectListProps> = ({ onSelectSubject }) => {
                             onClick={() => onSelectSubject(subject)}
                             needsReview={true}
                             stats={stats}
+                            style={{ animationDelay: `${index * 75}ms` }}
                           />
                         );
                     })}
@@ -211,7 +214,7 @@ const SubjectList: React.FC<SubjectListProps> = ({ onSelectSubject }) => {
                 {reviewSubjects.length > 0 ? "Todas as Matérias" : "Matérias"}
             </h2>
             <div className="space-y-4">
-                {otherSubjects.map((subject) => {
+                {otherSubjects.map((subject, index) => {
                     const data = learningData[subject.id];
                      const stats = {
                         totalExercises: data?.totalExercises || 0,
@@ -224,6 +227,7 @@ const SubjectList: React.FC<SubjectListProps> = ({ onSelectSubject }) => {
                         onClick={() => onSelectSubject(subject)}
                         needsReview={false}
                         stats={stats}
+                        style={{ animationDelay: `${(reviewSubjects.length + index) * 75}ms` }}
                       />
                     );
                 })}
@@ -231,7 +235,7 @@ const SubjectList: React.FC<SubjectListProps> = ({ onSelectSubject }) => {
         </div>
         
         {suggestion && (
-          <div className="mt-8">
+          <div className="mt-8 animate-fade-in-up" style={{ animationDelay: `${(reviewSubjects.length + otherSubjects.length) * 75}ms` }}>
             <h2 className="text-2xl font-bold text-gray-800 mb-4">Sugestão para Você</h2>
             <div className="p-5 rounded-2xl bg-blue-50 border border-blue-200">
               <div className="flex items-start">
