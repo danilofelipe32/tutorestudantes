@@ -76,7 +76,7 @@ const Exercise: React.FC<ExerciseProps> = ({ subject, onBack }) => {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-white">
+    <div className="flex flex-col h-full bg-white">
       <header className="flex items-center p-4 border-b border-gray-200">
         <button onClick={onBack} className="mr-2 p-2 rounded-full hover:bg-gray-100">
           <ArrowLeftIcon className="h-6 w-6 text-gray-600" />

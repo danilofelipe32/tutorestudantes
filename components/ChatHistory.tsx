@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import type { Subject, Message } from '../types';
 import { getChatHistoryForSubject, ChatHistoryItem } from '../services/chatHistoryService';
@@ -36,7 +37,7 @@ const ChatHistory: React.FC<ChatHistoryProps> = ({ subject, onBack }) => {
 
   if (selectedChat) {
     return (
-      <div className="flex flex-col h-screen bg-gray-50">
+      <div className="flex flex-col h-full bg-gray-50">
         <header className="flex items-center p-4 bg-white border-b border-gray-200 sticky top-0 z-10">
           <button onClick={() => setSelectedChat(null)} className="mr-2 p-2 rounded-full hover:bg-gray-100">
             <ArrowLeftIcon className="h-6 w-6 text-gray-600" />
@@ -70,7 +71,7 @@ const ChatHistory: React.FC<ChatHistoryProps> = ({ subject, onBack }) => {
   }
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col h-full">
       <header className="flex items-center p-4 bg-white border-b border-gray-200 sticky top-0 z-10">
         <button onClick={onBack} className="mr-2 p-2 rounded-full hover:bg-gray-100">
           <ArrowLeftIcon className="h-6 w-6 text-gray-600" />

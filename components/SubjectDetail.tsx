@@ -66,7 +66,7 @@ const SubjectDetail: React.FC<SubjectDetailProps> = ({ subject, onNavigateTo, on
   ];
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col h-full">
       <header className={`p-6 text-white ${subject.color} rounded-b-3xl`}>
         <div className="flex items-center mb-6 pt-4">
           <button onClick={onBack} className="mr-4 p-2 -ml-2">
