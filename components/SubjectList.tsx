@@ -76,9 +76,29 @@ const SubjectCard: React.FC<{
 
 const SubjectList: React.FC<SubjectListProps> = ({ onSelectSubject }) => {
   const [learningData, setLearningData] = useState<Record<string, SubjectLearningData>>({});
+  const [reviewSubjects, setReviewSubjects] = useState<Subject[]>([]);
+  const [otherSubjects, setOtherSubjects] = useState<Subject[]>([]);
 
   useEffect(() => {
-    setLearningData(getAllLearningData());
+    const data = getAllLearningData();
+    setLearningData(data);
+
+    const toReview: Subject[] = [];
+    const others: Subject[] = [];
+    const now = Date.now();
+
+    subjects.forEach(subject => {
+        const subjectData = data[subject.id];
+        const needsReview = subjectData ? (subjectData.nextReviewDate > 0 && now >= subjectData.nextReviewDate) : false;
+        if (needsReview) {
+            toReview.push(subject);
+        } else {
+            others.push(subject);
+        }
+    });
+
+    setReviewSubjects(toReview);
+    setOtherSubjects(others);
   }, []);
 
   return (
@@ -89,24 +109,54 @@ const SubjectList: React.FC<SubjectListProps> = ({ onSelectSubject }) => {
         </h1>
         <p className="text-gray-500 mt-2">Escolha uma matéria para começar a estudar</p>
       </header>
-      <main className="flex-grow space-y-4 overflow-y-auto pb-4">
-        {subjects.map((subject) => {
-            const data = learningData[subject.id];
-            const needsReview = data ? (data.nextReviewDate > 0 && Date.now() >= data.nextReviewDate) : false;
-            const stats = {
-                totalExercises: data?.totalExercises || 0,
-                correctAnswers: data?.correctAnswers || 0,
-            };
-            return (
-              <SubjectCard 
-                key={subject.id} 
-                subject={subject} 
-                onClick={() => onSelectSubject(subject)}
-                needsReview={needsReview}
-                stats={stats}
-              />
-            );
-        })}
+      <main className="flex-grow overflow-y-auto pb-4">
+        {reviewSubjects.length > 0 && (
+            <div className="mb-8">
+                <h2 className="text-2xl font-bold text-gray-800 mb-4">Para Revisar Hoje</h2>
+                <div className="space-y-4">
+                    {reviewSubjects.map((subject) => {
+                        const data = learningData[subject.id] || {};
+                        const stats = {
+                            totalExercises: data.totalExercises || 0,
+                            correctAnswers: data.correctAnswers || 0,
+                        };
+                        return (
+                          <SubjectCard 
+                            key={`review-${subject.id}`}
+                            subject={subject} 
+                            onClick={() => onSelectSubject(subject)}
+                            needsReview={true}
+                            stats={stats}
+                          />
+                        );
+                    })}
+                </div>
+            </div>
+        )}
+
+        <div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">
+                {reviewSubjects.length > 0 ? "Todas as Matérias" : "Matérias"}
+            </h2>
+            <div className="space-y-4">
+                {otherSubjects.map((subject) => {
+                    const data = learningData[subject.id] || {};
+                     const stats = {
+                        totalExercises: data.totalExercises || 0,
+                        correctAnswers: data.correctAnswers || 0,
+                    };
+                    return (
+                      <SubjectCard 
+                        key={subject.id} 
+                        subject={subject} 
+                        onClick={() => onSelectSubject(subject)}
+                        needsReview={false}
+                        stats={stats}
+                      />
+                    );
+                })}
+            </div>
+        </div>
       </main>
     </div>
   );

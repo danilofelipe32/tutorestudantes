@@ -22,6 +22,7 @@ const Exercise: React.FC<ExerciseProps> = ({ subject, onBack }) => {
   const [isVerified, setIsVerified] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [difficulty, setDifficulty] = useState<Difficulty>('Fácil');
+  const [isReviewMode, setIsReviewMode] = useState(false);
 
   const fetchQuestion = useCallback(async () => {
     setLoading(true);
@@ -31,9 +32,12 @@ const Exercise: React.FC<ExerciseProps> = ({ subject, onBack }) => {
     setError(null);
 
     const learningData = getLearningDataForSubject(subject.id);
+    const needsReview = learningData.nextReviewDate > 0 && Date.now() >= learningData.nextReviewDate;
+    
+    setIsReviewMode(needsReview);
     setDifficulty(learningData.currentDifficulty);
 
-    const newQuestion = await generateExercise(subject, learningData.currentDifficulty);
+    const newQuestion = await generateExercise(subject, learningData.currentDifficulty, needsReview);
     if (newQuestion) {
       setQuestion(newQuestion);
     } else {
@@ -93,7 +97,9 @@ const Exercise: React.FC<ExerciseProps> = ({ subject, onBack }) => {
                 <QuestionMarkIcon className="h-6 w-6 text-gray-600" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-gray-500">QUESTÃO - {difficulty.toUpperCase()}</p>
+                <p className="text-sm font-semibold text-gray-500">
+                  {isReviewMode ? 'REVISÃO' : 'QUESTÃO'} - {difficulty.toUpperCase()}
+                </p>
                 <h2 className="text-lg font-semibold text-gray-800 mt-1">{question.question}</h2>
               </div>
             </div>
