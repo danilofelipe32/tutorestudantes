@@ -156,10 +156,11 @@ const SubjectList: React.FC<SubjectListProps> = ({ onSelectSubject }) => {
                 <h2 className="text-2xl font-bold text-gray-800 mb-4">Para Revisar Hoje</h2>
                 <div className="space-y-4">
                     {reviewSubjects.map((subject) => {
-                        const data = learningData[subject.id] || {};
+// FIX: Safely access properties on potentially undefined learning data using optional chaining.
+                        const data = learningData[subject.id];
                         const stats = {
-                            totalExercises: data.totalExercises || 0,
-                            correctAnswers: data.correctAnswers || 0,
+                            totalExercises: data?.totalExercises || 0,
+                            correctAnswers: data?.correctAnswers || 0,
                         };
                         return (
                           <SubjectCard 
@@ -181,10 +182,11 @@ const SubjectList: React.FC<SubjectListProps> = ({ onSelectSubject }) => {
             </h2>
             <div className="space-y-4">
                 {otherSubjects.map((subject) => {
-                    const data = learningData[subject.id] || {};
+// FIX: Safely access properties on potentially undefined learning data using optional chaining.
+                    const data = learningData[subject.id];
                      const stats = {
-                        totalExercises: data.totalExercises || 0,
-                        correctAnswers: data.correctAnswers || 0,
+                        totalExercises: data?.totalExercises || 0,
+                        correctAnswers: data?.correctAnswers || 0,
                     };
                     return (
                       <SubjectCard 

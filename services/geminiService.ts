@@ -1,10 +1,16 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import type { Subject, ExerciseQuestion } from '../types';
 
-// FIX: Initialize the GoogleGenAI client with the API key from environment variables instead of hardcoding it.
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// ATENÇÃO: A chave de API está no código para fins de teste, conforme solicitado.
+// Para produção, use um método seguro como variáveis de ambiente e um backend.
+const GEMINI_API_KEY = "INSERT_YOUR_API_KEY_HERE";
+
+const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
 export const getTutorResponse = async (subject: Subject, messageHistory: { role: 'user' | 'model', parts: { text: string }[] }[], newMessage: string): Promise<string> => {
+  if (!GEMINI_API_KEY || GEMINI_API_KEY === "INSERT_YOUR_API_KEY_HERE") {
+    return "ERRO: A chave da API do Gemini não foi configurada. Por favor, adicione sua chave no arquivo `services/geminiService.ts`.";
+  }
   try {
     const chat = ai.chats.create({
       model: 'gemini-2.5-flash',
@@ -38,6 +44,10 @@ export const getTutorResponse = async (subject: Subject, messageHistory: { role:
 };
 
 export const generateExercise = async (subject: Subject, difficulty: string, isReview: boolean): Promise<ExerciseQuestion | null> => {
+  if (!GEMINI_API_KEY || GEMINI_API_KEY === "INSERT_YOUR_API_KEY_HERE") {
+    console.error("Gemini API key is not configured.");
+    return null;
+  }
   const promptType = isReview ? 'revisão para fixação de conteúdo' : 'prática';
   const prompt = `Gere uma questão de ${promptType} de múltipla escolha de nível ${difficulty} sobre ${subject.name} para um estudante do ensino médio no Brasil. O objetivo é testar e reforçar o conhecimento. O formato da resposta deve ser um JSON. A questão deve ser desafiadora, mas justa para o nível selecionado. Forneça 4 opções de resposta (A, B, C, D). Indique qual é a opção correta e forneça uma breve explicação do porquê. Apenas uma opção pode ser correta. Não inclua a formatação de markdown ('''json) na sua resposta, apenas o JSON bruto.`;
   try {
