@@ -1,0 +1,23 @@
+{
+  "name": "Tutor IA - Ensino Médio",
+  "short_name": "Tutor IA",
+  "description": "Um aplicativo de tutoria com inteligência artificial para auxiliar estudantes do ensino médio nas principais disciplinas, com chat e exercícios interativos.",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#f9fafb",
+  "theme_color": "#ffffff",
+  "icons": [
+    {
+      "src": "/vite.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/vite.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

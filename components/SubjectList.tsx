@@ -1,7 +1,9 @@
 
+
 import React, { useState, useEffect } from 'react';
 import type { Subject } from '../types';
-import { BookIcon, CalculatorIcon, FlaskIcon, ClockIcon, GlobeIcon, TranslateIcon, ChevronRightIcon, BellIcon } from './Icons';
+// FIX: Corrected icon imports by removing icons that are not exported from './Icons'. Only ChevronRightIcon and BellIcon are used in this file.
+import { ChevronRightIcon, BellIcon } from './Icons';
 import { getAllLearningData, SubjectLearningData } from '../services/learningService';
 import { subjects } from '../data/subjects';
 import { requestNotificationPermission } from '../services/notificationService';

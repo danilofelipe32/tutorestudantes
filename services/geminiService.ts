@@ -1,7 +1,8 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import type { Subject, ExerciseQuestion } from '../types';
 
-const ai = new GoogleGenAI({ apiKey: "AIzaSyA8z9gxOEp2usOFToxGQV0z7rWtiya2L9o" });
+// FIX: Initialize the GoogleGenAI client with the API key from environment variables instead of hardcoding it.
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 export const getTutorResponse = async (subject: Subject, messageHistory: { role: 'user' | 'model', parts: { text: string }[] }[], newMessage: string): Promise<string> => {
   try {
