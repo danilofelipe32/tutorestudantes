@@ -53,19 +53,18 @@ const Exercise: React.FC<ExerciseProps> = ({ subject, onBack }) => {
     fetchQuestion();
   }, [fetchQuestion]);
 
-  const handleVerify = () => {
-    if (selectedOptionId && question) {
-      const isCorrect = selectedOptionId === question.correctOptionId;
-      updateLearningDataForSubject(subject.id, isCorrect);
-      setIsVerified(true);
-    }
+  const handleSelectAndVerify = (optionId: string) => {
+    if (isVerified || !question) return;
+
+    setSelectedOptionId(optionId);
+    const isCorrect = optionId === question.correctOptionId;
+    updateLearningDataForSubject(subject.id, isCorrect);
+    setIsVerified(true);
   };
 
   const getOptionClasses = (optionId: string) => {
     if (!isVerified) {
-      return selectedOptionId === optionId
-        ? 'bg-blue-100 border-blue-500 ring-2 ring-blue-500'
-        : 'bg-white border-gray-300 hover:bg-gray-50';
+      return 'bg-white border-gray-300 hover:bg-gray-50';
     }
     if (optionId === question?.correctOptionId) {
       return 'bg-green-100 border-green-500 text-green-800';
@@ -111,7 +110,7 @@ const Exercise: React.FC<ExerciseProps> = ({ subject, onBack }) => {
               {question.options.map((option, index) => (
                 <button
                   key={option.id}
-                  onClick={() => !isVerified && setSelectedOptionId(option.id)}
+                  onClick={() => handleSelectAndVerify(option.id)}
                   disabled={isVerified}
                   className={`w-full flex items-center p-4 rounded-xl border-2 text-left transition-all duration-300 ${getOptionClasses(option.id)}`}
                 >
@@ -158,11 +157,10 @@ const Exercise: React.FC<ExerciseProps> = ({ subject, onBack }) => {
             </button>
         ) : (
             <button
-              onClick={handleVerify}
-              disabled={!selectedOptionId || loading}
-              className="w-full bg-green-500 text-white font-semibold py-3 rounded-xl hover:bg-green-600 transition-colors disabled:bg-gray-300 disabled:text-gray-700 disabled:cursor-not-allowed"
+              disabled={true}
+              className="w-full bg-gray-300 text-gray-700 font-semibold py-3 rounded-xl cursor-not-allowed"
             >
-              Verificar Resposta
+              Selecione uma resposta
             </button>
         )}
       </footer>

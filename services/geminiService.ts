@@ -1,8 +1,10 @@
+
 import { GoogleGenAI, Type } from "@google/genai";
 import type { Subject, ExerciseQuestion } from '../types';
+import { offlineExercises } from '../data/offlineExercises';
 
-// A chave de API é obtida de forma segura a partir das variáveis de ambiente.
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// A chave de API é inserida diretamente para a fase de testes.
+const ai = new GoogleGenAI({ apiKey: "AIzaSyA8z9gxOEp2usOFToxGQV0z7rWtiya2L9o" });
 
 export const getTutorResponse = async (
   subject: Subject,
@@ -67,6 +69,16 @@ export const getTutorResponse = async (
 };
 
 export const generateExercise = async (subject: Subject, difficulty: string, isReview: boolean): Promise<ExerciseQuestion | null> => {
+  if (!navigator.onLine) {
+    console.log("Modo offline: tentando carregar exercício do cache.");
+    const cachedQuestions = offlineExercises[subject.id];
+    if (cachedQuestions && cachedQuestions.length > 0) {
+      const randomIndex = Math.floor(Math.random() * cachedQuestions.length);
+      return cachedQuestions[randomIndex];
+    }
+    return null;
+  }
+
   const promptType = isReview ? 'revisão para fixação de conteúdo' : 'prática';
   const prompt = `Gere uma questão de ${promptType} de múltipla escolha de nível ${difficulty} sobre ${subject.name} para um estudante do ensino médio no Brasil. O objetivo é testar e reforçar o conhecimento. O formato da resposta deve ser um JSON. A questão deve ser desafiadora, mas justa para o nível selecionado. Forneça 4 opções de resposta (A, B, C, D). Indique qual é a opção correta e forneça uma breve explicação do porquê. Apenas uma opção pode ser correta. Não inclua a formatação de markdown ('''json) na sua resposta, apenas o JSON bruto.`;
   try {

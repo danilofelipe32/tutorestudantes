@@ -1,9 +1,28 @@
-const CACHE_NAME = 'tutor-ia-cache-v1';
+const CACHE_NAME = 'tutor-ia-cache-v2';
 // Adiciona os recursos essenciais do "app shell" que devem estar disponíveis offline desde o início.
 const URLS_TO_CACHE = [
   '/',
   '/index.html',
-  '/vite.svg'
+  '/vite.svg',
+  '/manifest.json',
+  // Arquivos principais da aplicação
+  '/index.tsx',
+  '/App.tsx',
+  '/types.ts',
+  // Todos os componentes, dados e serviços para garantir a navegação básica
+  '/data/subjects.ts',
+  '/components/Icons.tsx',
+  '/components/SubjectList.tsx',
+  '/components/SubjectDetail.tsx',
+  '/components/Exercise.tsx',
+  '/components/TutorChat.tsx',
+  '/components/StudySession.tsx',
+  '/components/ChatHistory.tsx',
+  '/services/learningService.ts',
+  '/services/chatHistoryService.ts',
+  '/services/notificationService.ts',
+  // O serviço gemini é necessário mesmo offline para conter a lógica de fallback
+  '/services/geminiService.ts'
 ];
 
 // Instala o service worker e armazena em cache o app shell.
