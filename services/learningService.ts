@@ -4,15 +4,17 @@ const LEARNING_DATA_KEY = 'tutorIaLearningData';
 
 const difficultyLevels: Difficulty[] = ['Fácil', 'Médio', 'Difícil'];
 
-interface SubjectLearningData {
+export interface SubjectLearningData {
   currentDifficulty: Difficulty;
   nextReviewDate: number;
   intervalDays: number;
+  totalExercises: number;
+  correctAnswers: number;
 }
 
 type LearningData = Record<string, SubjectLearningData>;
 
-const getAllLearningData = (): LearningData => {
+export const getAllLearningData = (): LearningData => {
   try {
     const data = localStorage.getItem(LEARNING_DATA_KEY);
     return data ? JSON.parse(data) : {};
@@ -36,6 +38,8 @@ export const getLearningDataForSubject = (subjectId: string): SubjectLearningDat
     currentDifficulty: 'Fácil',
     nextReviewDate: 0,
     intervalDays: 1,
+    totalExercises: 0,
+    correctAnswers: 0,
   };
 };
 
@@ -63,10 +67,15 @@ export const updateLearningDataForSubject = (subjectId: string, isCorrect: boole
   const now = new Date();
   const nextReviewDate = new Date(now.setDate(now.getDate() + nextIntervalDays)).getTime();
 
+  const newTotalExercises = currentData.totalExercises + 1;
+  const newCorrectAnswers = currentData.correctAnswers + (isCorrect ? 1 : 0);
+
   allData[subjectId] = {
     currentDifficulty: nextDifficulty,
     intervalDays: nextIntervalDays,
     nextReviewDate,
+    totalExercises: newTotalExercises,
+    correctAnswers: newCorrectAnswers,
   };
 
   saveAllLearningData(allData);

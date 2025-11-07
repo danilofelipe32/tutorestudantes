@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { Subject } from '../types';
 import { BookIcon, CalculatorIcon, FlaskIcon, ClockIcon, GlobeIcon, TranslateIcon, ChevronRightIcon, BellIcon } from './Icons';
-import { getReviewSchedule } from '../services/learningService';
+import { getAllLearningData, SubjectLearningData } from '../services/learningService';
 
 interface SubjectListProps {
   onSelectSubject: (subject: Subject) => void;
@@ -24,38 +24,61 @@ const subjects: Subject[] = [
   { id: 'educacaofisica', name: 'Educação Física', description: 'Corpo, movimento, saúde e esportes', color: 'bg-brand-orange', icon: GlobeIcon },
 ];
 
-const SubjectCard: React.FC<{ subject: Subject; onClick: () => void; needsReview: boolean }> = ({ subject, onClick, needsReview }) => (
-  <button
-    onClick={onClick}
-    className={`w-full p-5 rounded-2xl text-white shadow-md transition-transform hover:scale-105 ${subject.color} relative overflow-hidden`}
-  >
-    {needsReview && (
-        <div className="absolute top-2 right-2 flex items-center bg-white/25 text-white text-xs font-bold px-2 py-1 rounded-full">
-            <BellIcon className="h-4 w-4 mr-1"/>
-            Revisar
-        </div>
-    )}
-    <div className="flex items-center justify-between">
-      <div className="flex items-center">
-        <div className="bg-white/30 p-3 rounded-full">
-          <subject.icon className="h-6 w-6 text-white" />
-        </div>
-        <div className="ml-4 text-left">
-          <h3 className="font-bold text-lg">{subject.name}</h3>
-          <p className="text-sm opacity-90">{subject.description}</p>
-        </div>
-      </div>
-      <ChevronRightIcon className="h-6 w-6 text-white/70" />
-    </div>
-  </button>
-);
+const SubjectCard: React.FC<{
+    subject: Subject;
+    onClick: () => void;
+    needsReview: boolean;
+    stats: { totalExercises: number; correctAnswers: number };
+}> = ({ subject, onClick, needsReview, stats }) => {
+    const accuracy = stats.totalExercises > 0
+        ? Math.round((stats.correctAnswers / stats.totalExercises) * 100)
+        : 0;
+
+    return (
+        <button
+            onClick={onClick}
+            className={`w-full p-5 rounded-2xl text-white shadow-md transition-transform hover:scale-105 ${subject.color} relative overflow-hidden`}
+        >
+            {needsReview && (
+                <div className="absolute top-2 right-2 flex items-center bg-white/25 text-white text-xs font-bold px-2 py-1 rounded-full">
+                    <BellIcon className="h-4 w-4 mr-1"/>
+                    Revisar
+                </div>
+            )}
+            <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                    <div className="bg-white/30 p-3 rounded-full">
+                        <subject.icon className="h-6 w-6 text-white" />
+                    </div>
+                    <div className="ml-4 text-left">
+                        <h3 className="font-bold text-lg">{subject.name}</h3>
+                        <p className="text-sm opacity-90">{subject.description}</p>
+                    </div>
+                </div>
+                <ChevronRightIcon className="h-6 w-6 text-white/70" />
+            </div>
+            
+            {stats.totalExercises > 0 && (
+                <>
+                    <div className="border-t border-white/30 my-3"></div>
+                    <div className="flex justify-between items-center text-sm font-medium">
+                        <span>
+                            {stats.totalExercises} {stats.totalExercises === 1 ? 'exercício' : 'exercícios'}
+                        </span>
+                        <span>{accuracy}% de acerto</span>
+                    </div>
+                </>
+            )}
+        </button>
+    );
+};
 
 
 const SubjectList: React.FC<SubjectListProps> = ({ onSelectSubject }) => {
-  const [reviewSchedule, setReviewSchedule] = useState<Record<string, { needsReview: boolean }>>({});
+  const [learningData, setLearningData] = useState<Record<string, SubjectLearningData>>({});
 
   useEffect(() => {
-    setReviewSchedule(getReviewSchedule());
+    setLearningData(getAllLearningData());
   }, []);
 
   return (
@@ -67,14 +90,23 @@ const SubjectList: React.FC<SubjectListProps> = ({ onSelectSubject }) => {
         <p className="text-gray-500 mt-2">Escolha uma matéria para começar a estudar</p>
       </header>
       <main className="flex-grow space-y-4 overflow-y-auto pb-4">
-        {subjects.map((subject) => (
-          <SubjectCard 
-            key={subject.id} 
-            subject={subject} 
-            onClick={() => onSelectSubject(subject)}
-            needsReview={reviewSchedule[subject.id]?.needsReview || false}
-          />
-        ))}
+        {subjects.map((subject) => {
+            const data = learningData[subject.id];
+            const needsReview = data ? (data.nextReviewDate > 0 && Date.now() >= data.nextReviewDate) : false;
+            const stats = {
+                totalExercises: data?.totalExercises || 0,
+                correctAnswers: data?.correctAnswers || 0,
+            };
+            return (
+              <SubjectCard 
+                key={subject.id} 
+                subject={subject} 
+                onClick={() => onSelectSubject(subject)}
+                needsReview={needsReview}
+                stats={stats}
+              />
+            );
+        })}
       </main>
     </div>
   );
