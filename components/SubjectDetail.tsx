@@ -1,8 +1,9 @@
 
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import type { Subject } from '../types';
 import { Screen } from '../types';
-import { ArrowLeftIcon, ChatBubbleIcon, PencilIcon, InfoIcon, ChevronRightIcon, ClockIcon } from './Icons';
+import { getChatHistoryForSubject } from '../services/chatHistoryService';
+import { ArrowLeftIcon, ChatBubbleIcon, PencilIcon, InfoIcon, ChevronRightIcon, ClockIcon, ArchiveBoxIcon } from './Icons';
 
 interface SubjectDetailProps {
   subject: Subject;
@@ -13,6 +14,12 @@ interface SubjectDetailProps {
 const SubjectDetail: React.FC<SubjectDetailProps> = ({ subject, onNavigateTo, onBack }) => {
   const [learningGoal, setLearningGoal] = useState('');
   const [learningStyle, setLearningStyle] = useState('');
+  const [hasHistory, setHasHistory] = useState(false);
+
+  useEffect(() => {
+    const history = getChatHistoryForSubject(subject.id);
+    setHasHistory(history.length > 0);
+  }, [subject.id]);
 
   return (
     <div className="flex flex-col h-screen">
@@ -84,6 +91,24 @@ const SubjectDetail: React.FC<SubjectDetailProps> = ({ subject, onNavigateTo, on
                 </div>
                 <ChevronRightIcon className="h-5 w-5 text-gray-400" />
             </button>
+
+            {hasHistory && (
+              <button 
+                  onClick={() => onNavigateTo(Screen.CHAT_HISTORY)}
+                  className="w-full flex items-center justify-between p-5 bg-gray-100 rounded-2xl border border-gray-200 hover:bg-gray-200 transition-colors"
+              >
+                  <div className="flex items-center">
+                      <div className="p-3 bg-purple-500 rounded-xl">
+                          <ArchiveBoxIcon className="h-6 w-6 text-white"/>
+                      </div>
+                      <div className="ml-4 text-left">
+                          <p className="font-semibold text-gray-800">Histórico de Conversas</p>
+                          <p className="text-sm text-gray-500">Reveja seus bate-papos anteriores</p>
+                      </div>
+                  </div>
+                  <ChevronRightIcon className="h-5 w-5 text-gray-400" />
+              </button>
+            )}
         </div>
         
         {/* Seção de Personalização */}

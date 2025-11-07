@@ -2,6 +2,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import type { Subject, Message } from '../types';
 import { getTutorResponse } from '../services/geminiService';
+import { saveChatHistory } from '../services/chatHistoryService';
 import { ArrowLeftIcon, SendIcon } from './Icons';
 
 interface TutorChatProps {
@@ -47,11 +48,16 @@ const TutorChat: React.FC<TutorChatProps> = ({ subject, onBack, learningGoal, le
     setIsLoading(false);
   }, [input, isLoading, messages, subject, learningGoal, learningStyle]);
 
+  const handleBack = () => {
+    saveChatHistory(subject.id, messages);
+    onBack();
+  };
+
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
       <header className="flex items-center p-4 bg-white border-b border-gray-200 sticky top-0 z-10">
-        <button onClick={onBack} className="mr-2 p-2 rounded-full hover:bg-gray-100">
+        <button onClick={handleBack} className="mr-2 p-2 rounded-full hover:bg-gray-100">
           <ArrowLeftIcon className="h-6 w-6 text-gray-600" />
         </button>
         <div className="flex items-center">
