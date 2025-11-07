@@ -7,35 +7,65 @@ const GEMINI_API_KEY = "INSERT_YOUR_API_KEY_HERE";
 
 const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
-export const getTutorResponse = async (subject: Subject, messageHistory: { role: 'user' | 'model', parts: { text: string }[] }[], newMessage: string): Promise<string> => {
+export const getTutorResponse = async (
+  subject: Subject,
+  messageHistory: { role: 'user' | 'model', parts: { text: string }[] }[],
+  newMessage: string,
+  learningGoal?: string,
+  learningStyle?: string
+): Promise<string> => {
   if (!GEMINI_API_KEY || GEMINI_API_KEY === "INSERT_YOUR_API_KEY_HERE") {
     return "ERRO: A chave da API do Gemini não foi configurada. Por favor, adicione sua chave no arquivo `services/geminiService.ts`.";
   }
+
+  let systemInstruction = `
+    Você é um tutor especialista em ${subject.name} para um estudante do ensino médio no Brasil. 
+    Sua principal diretriz é atuar no "Modo Estudante", um método de aprendizado guiado.
+
+    REGRAS ESTRITAS:
+    1. NUNCA FORNEÇA A RESPOSTA DIRETA: Jamais responda diretamente a uma pergunta do aluno. Seu papel é guiar, não dar respostas prontas.
+    2. FAÇA PERGUNTAS: Em vez de responder, faça perguntas que levem o aluno a pensar sobre o problema e a encontrar a solução por conta própria. Use o método socrático.
+    3. DÊ PISTAS E ANALOGIAS: Ofereça dicas, exemplos simples e analogias para ajudar o aluno a conectar os pontos.
+    4. MANTENHA O FOCO NA DISCIPLINA: Responda APENAS a questionamentos sobre ${subject.name}. Se o aluno perguntar sobre outro tópico (seja outra matéria, um assunto pessoal ou qualquer outra coisa), recuse educadamente a resposta e gentilmente o traga de volta para o foco da aula de ${subject.name}.
+    5. SEJA PACIENTE E ENCANTADOR: Mantenha sempre um tom amigável, positivo e encorajador. O objetivo é construir a confiança do aluno.
+
+    Exemplo de interação:
+    Aluno: "O que é a mitocôndria?"
+    Sua Resposta Correta: "Ótima pergunta! A mitocôndria é conhecida como a 'usina de energia' da célula. Você consegue pensar por que ela teria esse apelido? O que você já sabe sobre produção de energia no corpo?"
+    Sua Resposta INCORRETA: "A mitocôndria é uma organela celular responsável pela respiração celular e produção de ATP."
+  `;
+
+  if (learningGoal) {
+    systemInstruction += `\n\nDIRETRIZ ADICIONAL - FOCO DA SESSÃO: O objetivo de aprendizado específico do aluno para esta sessão é: "${learningGoal}". Concentre sua orientação para ajudá-lo a atingir esse objetivo.`;
+  }
+
+  if (learningStyle) {
+    let styleGuidance = '';
+    switch (learningStyle) {
+      case 'Visual':
+        styleGuidance = "Use analogias visuais, descreva imagens mentais, sugira a criação de diagramas ou mapas mentais e use uma linguagem rica em descrições.";
+        break;
+      case 'Auditivo':
+        styleGuidance = "Explique os conceitos passo a passo, como se estivesse conversando. Use repetição de ideias-chave e faça perguntas que incentivem o aluno a verbalizar seu raciocínio.";
+        break;
+      case 'Cinestésico':
+        styleGuidance = "Conecte os conceitos a exemplos práticos e do mundo real. Sugira pequenas atividades ou experimentos mentais que o aluno possa fazer para entender o tópico.";
+        break;
+    }
+    if (styleGuidance) {
+        systemInstruction += `\n\nDIRETRIZ ADICIONAL - ESTILO DE APRENDIZADO: O estilo de aprendizado preferido do aluno é ${learningStyle}. Adapte suas explicações da seguinte forma: ${styleGuidance}`;
+    }
+  }
+
   try {
     const chat = ai.chats.create({
       model: 'gemini-2.5-flash',
       config: {
-        systemInstruction: `
-          Você é um tutor especialista em ${subject.name} para um estudante do ensino médio no Brasil. 
-          Sua principal diretriz é atuar no "Modo Estudante", um método de aprendizado guiado.
-
-          REGRAS ESTRITAS:
-          1. NUNCA FORNEÇA A RESPOSTA DIRETA: Jamais responda diretamente a uma pergunta do aluno. Seu papel é guiar, não dar respostas prontas.
-          2. FAÇA PERGUNTAS: Em vez de responder, faça perguntas que levem o aluno a pensar sobre o problema e a encontrar a solução por conta própria. Use o método socrático.
-          3. DÊ PISTAS E ANALOGIAS: Ofereça dicas, exemplos simples e analogias para ajudar o aluno a conectar os pontos.
-          4. MANTENHA O FOCO NA DISCIPLINA: Responda APENAS a questionamentos sobre ${subject.name}. Se o aluno perguntar sobre outro tópico (seja outra matéria, um assunto pessoal ou qualquer outra coisa), recuse educadamente a resposta e gentilmente o traga de volta para o foco da aula de ${subject.name}.
-          5. SEJA PACIENTE E ENCANTADOR: Mantenha sempre um tom amigável, positivo e encorajador. O objetivo é construir a confiança do aluno.
-
-          Exemplo de interação:
-          Aluno: "O que é a mitocôndria?"
-          Sua Resposta Correta: "Ótima pergunta! A mitocôndria é conhecida como a 'usina de energia' da célula. Você consegue pensar por que ela teria esse apelido? O que você já sabe sobre produção de energia no corpo?"
-          Sua Resposta INCORRETA: "A mitocôndria é uma organela celular responsável pela respiração celular e produção de ATP."
-        `,
+        systemInstruction: systemInstruction.trim(),
       },
       history: messageHistory,
     });
     const result = await chat.sendMessage({ message: newMessage });
-    // FIX: The function must return a value from the try block, and the response text should be accessed via the `.text` property, not called as a function.
     return result.text;
   } catch (error) {
     console.error("Error fetching tutor response:", error);
@@ -79,7 +109,6 @@ export const generateExercise = async (subject: Subject, difficulty: string, isR
         }
     });
     
-    // FIX: The response text should be accessed via the `.text` property of the response object.
     const jsonString = response.text;
 
     if (!jsonString) {
