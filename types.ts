@@ -32,3 +32,5 @@ export interface ExerciseQuestion {
   correctOptionId: string;
   explanation: string;
 }
+
+export type Difficulty = 'Fácil' | 'Médio' | 'Difícil';

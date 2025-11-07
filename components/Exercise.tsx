@@ -1,15 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import type { Subject, ExerciseQuestion } from '../types';
+import type { Subject, ExerciseQuestion, Difficulty } from '../types';
 import { generateExercise } from '../services/geminiService';
+import { getLearningDataForSubject, updateLearningDataForSubject } from '../services/learningService';
 import { ArrowLeftIcon, QuestionMarkIcon } from './Icons';
 
 interface ExerciseProps {
   subject: Subject;
   onBack: () => void;
 }
-
-const difficultyLevels = ['Fácil', 'Médio', 'Difícil'] as const;
-type Difficulty = typeof difficultyLevels[number];
 
 const LoadingSpinner: React.FC = () => (
     <div className="flex justify-center items-center h-full">
@@ -23,7 +21,7 @@ const Exercise: React.FC<ExerciseProps> = ({ subject, onBack }) => {
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
   const [isVerified, setIsVerified] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [difficulty, setDifficulty] = useState<Difficulty>('Médio');
+  const [difficulty, setDifficulty] = useState<Difficulty>('Fácil');
 
   const fetchQuestion = useCallback(async () => {
     setLoading(true);
@@ -31,21 +29,27 @@ const Exercise: React.FC<ExerciseProps> = ({ subject, onBack }) => {
     setSelectedOptionId(null);
     setQuestion(null);
     setError(null);
-    const newQuestion = await generateExercise(subject, difficulty);
+
+    const learningData = getLearningDataForSubject(subject.id);
+    setDifficulty(learningData.currentDifficulty);
+
+    const newQuestion = await generateExercise(subject, learningData.currentDifficulty);
     if (newQuestion) {
       setQuestion(newQuestion);
     } else {
       setError("Não foi possível gerar um exercício. Tente novamente.");
     }
     setLoading(false);
-  }, [subject, difficulty]);
+  }, [subject]);
 
   useEffect(() => {
     fetchQuestion();
   }, [fetchQuestion]);
 
   const handleVerify = () => {
-    if (selectedOptionId) {
+    if (selectedOptionId && question) {
+      const isCorrect = selectedOptionId === question.correctOptionId;
+      updateLearningDataForSubject(subject.id, isCorrect);
       setIsVerified(true);
     }
   };
@@ -80,22 +84,6 @@ const Exercise: React.FC<ExerciseProps> = ({ subject, onBack }) => {
       </header>
 
       <main className="flex-grow p-6 overflow-y-auto">
-        <div className="flex justify-center space-x-2 mb-6">
-            {difficultyLevels.map((level) => (
-                <button
-                    key={level}
-                    onClick={() => setDifficulty(level)}
-                    className={`px-4 py-2 rounded-full text-sm font-semibold transition-colors ${
-                        difficulty === level
-                        ? 'bg-blue-500 text-white shadow'
-                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                    }`}
-                >
-                    {level}
-                </button>
-            ))}
-        </div>
-
         {loading && <LoadingSpinner />}
         {error && <div className="text-center text-red-500">{error}</div>}
         {question && !loading && (

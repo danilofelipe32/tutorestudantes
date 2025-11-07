@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import type { Subject } from '../types';
-import { BookIcon, CalculatorIcon, FlaskIcon, ClockIcon, GlobeIcon, TranslateIcon, ChevronRightIcon } from './Icons';
+import { BookIcon, CalculatorIcon, FlaskIcon, ClockIcon, GlobeIcon, TranslateIcon, ChevronRightIcon, BellIcon } from './Icons';
+import { getReviewSchedule } from '../services/learningService';
 
 interface SubjectListProps {
   onSelectSubject: (subject: Subject) => void;
@@ -23,11 +24,17 @@ const subjects: Subject[] = [
   { id: 'educacaofisica', name: 'Educação Física', description: 'Corpo, movimento, saúde e esportes', color: 'bg-brand-orange', icon: GlobeIcon },
 ];
 
-const SubjectCard: React.FC<{ subject: Subject; onClick: () => void }> = ({ subject, onClick }) => (
+const SubjectCard: React.FC<{ subject: Subject; onClick: () => void; needsReview: boolean }> = ({ subject, onClick, needsReview }) => (
   <button
     onClick={onClick}
-    className={`w-full p-5 rounded-2xl text-white shadow-md transition-transform hover:scale-105 ${subject.color}`}
+    className={`w-full p-5 rounded-2xl text-white shadow-md transition-transform hover:scale-105 ${subject.color} relative overflow-hidden`}
   >
+    {needsReview && (
+        <div className="absolute top-2 right-2 flex items-center bg-white/25 text-white text-xs font-bold px-2 py-1 rounded-full">
+            <BellIcon className="h-4 w-4 mr-1"/>
+            Revisar
+        </div>
+    )}
     <div className="flex items-center justify-between">
       <div className="flex items-center">
         <div className="bg-white/30 p-3 rounded-full">
@@ -45,6 +52,12 @@ const SubjectCard: React.FC<{ subject: Subject; onClick: () => void }> = ({ subj
 
 
 const SubjectList: React.FC<SubjectListProps> = ({ onSelectSubject }) => {
+  const [reviewSchedule, setReviewSchedule] = useState<Record<string, { needsReview: boolean }>>({});
+
+  useEffect(() => {
+    setReviewSchedule(getReviewSchedule());
+  }, []);
+
   return (
     <div className="p-6 h-full flex flex-col">
       <header className="pt-8 pb-6">
@@ -55,7 +68,12 @@ const SubjectList: React.FC<SubjectListProps> = ({ onSelectSubject }) => {
       </header>
       <main className="flex-grow space-y-4 overflow-y-auto pb-4">
         {subjects.map((subject) => (
-          <SubjectCard key={subject.id} subject={subject} onClick={() => onSelectSubject(subject)} />
+          <SubjectCard 
+            key={subject.id} 
+            subject={subject} 
+            onClick={() => onSelectSubject(subject)}
+            needsReview={reviewSchedule[subject.id]?.needsReview || false}
+          />
         ))}
       </main>
     </div>
