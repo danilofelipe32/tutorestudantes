@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import type { Subject, ExerciseQuestion, Difficulty } from '../types';
 import { generateExercise } from '../services/geminiService';
 import { getLearningDataForSubject, updateLearningDataForSubject } from '../services/learningService';
+import { saveExerciseAttempt } from '../services/exerciseHistoryService';
 import { ArrowLeftIcon, QuestionMarkIcon } from './Icons';
 
 interface ExerciseProps {
@@ -58,7 +59,13 @@ const Exercise: React.FC<ExerciseProps> = ({ subject, onBack }) => {
 
     setSelectedOptionId(optionId);
     const isCorrect = optionId === question.correctOptionId;
+    
+    // Atualiza as estatísticas de aprendizado geral
     updateLearningDataForSubject(subject.id, isCorrect);
+    
+    // Salva a tentativa específica no histórico
+    saveExerciseAttempt(subject.id, question, optionId, isCorrect);
+
     setIsVerified(true);
   };
 

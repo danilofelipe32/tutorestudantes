@@ -3,7 +3,8 @@ import React, {useState, useEffect} from 'react';
 import type { Subject } from '../types';
 import { Screen } from '../types';
 import { getChatHistoryForSubject } from '../services/chatHistoryService';
-import { ArrowLeftIcon, ChatBubbleIcon, PencilIcon, InfoIcon, ChevronRightIcon, ClockIcon, ArchiveBoxIcon, MicrophoneIcon } from './Icons';
+import { getExerciseHistoryForSubject } from '../services/exerciseHistoryService';
+import { ArrowLeftIcon, ChatBubbleIcon, PencilIcon, InfoIcon, ChevronRightIcon, ClockIcon, ArchiveBoxIcon, MicrophoneIcon, ClipboardCheckIcon } from './Icons';
 
 interface SubjectDetailProps {
   subject: Subject;
@@ -26,11 +27,14 @@ const getGradientClasses = (colorClass: string) => {
 const SubjectDetail: React.FC<SubjectDetailProps> = ({ subject, onNavigateTo, onBack }) => {
   const [learningGoal, setLearningGoal] = useState('');
   const [learningStyle, setLearningStyle] = useState('');
-  const [hasHistory, setHasHistory] = useState(false);
+  const [hasChatHistory, setHasChatHistory] = useState(false);
+  const [hasExerciseHistory, setHasExerciseHistory] = useState(false);
 
   useEffect(() => {
-    const history = getChatHistoryForSubject(subject.id);
-    setHasHistory(history.length > 0);
+    const chatHistory = getChatHistoryForSubject(subject.id);
+    setHasChatHistory(chatHistory.length > 0);
+    const exerciseHistory = getExerciseHistoryForSubject(subject.id);
+    setHasExerciseHistory(exerciseHistory.length > 0);
   }, [subject.id]);
 
   const actionButtons = [
@@ -68,12 +72,20 @@ const SubjectDetail: React.FC<SubjectDetailProps> = ({ subject, onNavigateTo, on
       show: true
     },
     {
+      screen: Screen.EXERCISE_HISTORY,
+      icon: ClipboardCheckIcon,
+      iconBg: 'bg-indigo-500',
+      title: 'Histórico de Exercícios',
+      subtitle: 'Reveja seus acertos e erros',
+      show: hasExerciseHistory
+    },
+    {
       screen: Screen.CHAT_HISTORY,
       icon: ArchiveBoxIcon,
       iconBg: 'bg-purple-500',
       title: 'Histórico de Conversas',
       subtitle: 'Reveja seus bate-papos anteriores',
-      show: hasHistory
+      show: hasChatHistory
     }
   ];
 

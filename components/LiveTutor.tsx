@@ -6,8 +6,8 @@ import type { Subject } from '../types';
 import { ArrowLeftIcon, MicrophoneIcon, MicrophoneSlashIcon, SpeakerWaveIcon, SpeakerXMarkIcon } from './Icons';
 import { createBlob, decode, decodeAudioData } from '../services/audioUtils';
 
-// Chave de API para fase de testes
-const ai = new GoogleGenAI({ apiKey: "AIzaSyA8z9gxOEp2usOFToxGQV0z7rWtiya2L9o" });
+// FIX: The API key must be obtained from the environment variable `process.env.API_KEY`.
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 interface LiveTutorProps {
   subject: Subject;

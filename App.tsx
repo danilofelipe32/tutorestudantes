@@ -10,6 +10,7 @@ import Exercise from './components/Exercise';
 import StudySession from './components/StudySession';
 import ChatHistory from './components/ChatHistory';
 import LiveTutor from './components/LiveTutor';
+import ExerciseHistory from './components/ExerciseHistory';
 import { setupNotificationChecks } from './services/notificationService';
 
 const App: React.FC = () => {
@@ -39,7 +40,7 @@ const App: React.FC = () => {
   }, []);
 
   const handleBack = useCallback(() => {
-    if (screen === Screen.TUTOR_CHAT || screen === Screen.EXERCISE || screen === Screen.STUDY_SESSION || screen === Screen.CHAT_HISTORY || screen === Screen.LIVE_TUTOR) {
+    if (screen === Screen.TUTOR_CHAT || screen === Screen.EXERCISE || screen === Screen.STUDY_SESSION || screen === Screen.CHAT_HISTORY || screen === Screen.LIVE_TUTOR || screen === Screen.EXERCISE_HISTORY) {
       setScreen(Screen.SUBJECT_DETAIL);
     } else if (screen === Screen.SUBJECT_DETAIL) {
       setScreen(Screen.SUBJECT_LIST);
@@ -96,6 +97,11 @@ const App: React.FC = () => {
           return <LiveTutor subject={selectedSubject} onBack={handleBack} />;
         }
         return <SubjectList onSelectSubject={handleSelectSubject} />; // Fallback
+      case Screen.EXERCISE_HISTORY:
+        if (selectedSubject) {
+          return <ExerciseHistory subject={selectedSubject} onBack={handleBack} />;
+        }
+        return <SubjectList onSelectSubject={handleSelectSubject} />; // Fallback;
       default:
         return <SubjectList onSelectSubject={handleSelectSubject} />;
     }
