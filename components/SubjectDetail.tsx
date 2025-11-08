@@ -11,6 +11,18 @@ interface SubjectDetailProps {
   onBack: () => void;
 }
 
+const getGradientClasses = (colorClass: string) => {
+  switch (colorClass) {
+    case 'bg-brand-red': return 'from-brand-red to-red-500';
+    case 'bg-brand-green': return 'from-brand-green to-green-500';
+    case 'bg-brand-teal': return 'from-brand-teal to-teal-500';
+    case 'bg-brand-orange': return 'from-brand-orange to-orange-400';
+    case 'bg-brand-lime': return 'from-brand-lime to-lime-500';
+    case 'bg-brand-purple': return 'from-brand-purple to-purple-500';
+    default: return colorClass;
+  }
+};
+
 const SubjectDetail: React.FC<SubjectDetailProps> = ({ subject, onNavigateTo, onBack }) => {
   const [learningGoal, setLearningGoal] = useState('');
   const [learningStyle, setLearningStyle] = useState('');
@@ -67,7 +79,7 @@ const SubjectDetail: React.FC<SubjectDetailProps> = ({ subject, onNavigateTo, on
 
   return (
     <div className="flex flex-col h-full">
-      <header className={`p-6 text-white ${subject.color} rounded-b-3xl`}>
+      <header className={`p-6 text-white bg-gradient-to-br ${getGradientClasses(subject.color)} rounded-b-3xl`}>
         <div className="flex items-center mb-6 pt-4">
           <button onClick={onBack} className="mr-4 p-2 -ml-2">
             <ArrowLeftIcon className="h-6 w-6" />
