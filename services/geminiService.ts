@@ -175,3 +175,26 @@ export const generateExercise = async (subject: Subject, difficulty: string, isR
     return null;
   }
 };
+
+export const getDailyTip = async (subject: Subject): Promise<string | null> => {
+  if (!navigator.onLine) {
+    return "Dica offline: Revise um tópico que você já estudou hoje para fortalecer sua memória!";
+  }
+
+  const prompt = `Gere uma 'Dica do Dia' ou um fato curioso ('Você Sabia?') curto e interessante sobre ${subject.name} para um estudante do ensino médio no Brasil. A dica deve ser educativa, envolvente e ter no máximo 2 frases. Responda apenas com o texto da dica, sem títulos ou formatação extra.`;
+
+  try {
+    const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+    });
+    const tip = response.text.trim();
+    if (!tip) {
+      throw new Error("API returned an empty tip.");
+    }
+    return tip;
+  } catch (error) {
+    console.error("Error generating daily tip:", error);
+    return null; // Retorna nulo em caso de erro para que a UI possa lidar com isso.
+  }
+};

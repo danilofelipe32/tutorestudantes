@@ -1,9 +1,11 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import type { Subject } from '../types';
 import { ChevronRightIcon, BellIcon, LightBulbIcon } from './Icons';
 import { getAllLearningData, SubjectLearningData } from '../services/learningService';
 import { subjects } from '../data/subjects';
 import { requestNotificationPermission } from '../services/notificationService';
+import { getDailyTip } from '../services/geminiService';
 
 interface SubjectListProps {
   onSelectSubject: (subject: Subject) => void;
@@ -67,6 +69,8 @@ const SubjectList: React.FC<SubjectListProps> = ({ onSelectSubject }) => {
   const [otherSubjects, setOtherSubjects] = useState<Subject[]>([]);
   const [permission, setPermission] = useState<NotificationPermission>('default');
   const [suggestion, setSuggestion] = useState<{ subject: Subject; reason: string; cta: string } | null>(null);
+  const [dailyTip, setDailyTip] = useState<string | null>(null);
+  const [isLoadingTip, setIsLoadingTip] = useState(true);
 
 
   useEffect(() => {
@@ -125,6 +129,36 @@ const SubjectList: React.FC<SubjectListProps> = ({ onSelectSubject }) => {
         });
       }
     }
+    
+    // Lógica da Dica do Dia
+    const fetchDailyTip = async () => {
+      const today = new Date().toISOString().split('T')[0];
+      try {
+        const storedTip = localStorage.getItem('dailyTip');
+        const storedDate = localStorage.getItem('tipDate');
+
+        if (storedTip && storedDate === today) {
+          setDailyTip(storedTip);
+        } else {
+          const randomSubject = subjects[Math.floor(Math.random() * subjects.length)];
+          const newTip = await getDailyTip(randomSubject);
+          if (newTip) {
+            setDailyTip(newTip);
+            localStorage.setItem('dailyTip', newTip);
+            localStorage.setItem('tipDate', today);
+          } else {
+            setDailyTip(storedTip || "Lembre-se: a consistência é a chave para o aprendizado. Estude um pouco todos os dias!");
+          }
+        }
+      } catch (error) {
+        console.error("Erro ao carregar a dica do dia:", error);
+        setDailyTip("Lembre-se: a consistência é a chave para o aprendizado. Estude um pouco todos os dias!");
+      } finally {
+        setIsLoadingTip(false);
+      }
+    };
+
+    fetchDailyTip();
 
   }, []);
 
@@ -259,6 +293,30 @@ const SubjectList: React.FC<SubjectListProps> = ({ onSelectSubject }) => {
             </div>
           </div>
         )}
+        
+        <div className="mt-8 animate-fade-in-up" style={{ animationDelay: `${(reviewSubjects.length + otherSubjects.length + 1) * 75}ms` }}>
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">Dica do Dia</h2>
+          <div className="p-5 rounded-2xl bg-yellow-50 border border-yellow-200 min-h-[90px] flex items-center">
+            {isLoadingTip ? (
+              <div className="flex items-center w-full animate-pulse">
+                <div className="p-2 bg-yellow-200 rounded-full mr-4 flex-shrink-0">
+                  <LightBulbIcon className="h-6 w-6 text-yellow-300" />
+                </div>
+                <div className="space-y-2 flex-grow">
+                  <div className="h-3 bg-yellow-200 rounded w-3/4"></div>
+                  <div className="h-3 bg-yellow-200 rounded w-1/2"></div>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-start">
+                <div className="p-2 bg-yellow-100 rounded-full mr-4 flex-shrink-0">
+                  <LightBulbIcon className="h-6 w-6 text-yellow-600" />
+                </div>
+                <p className="text-gray-700 text-sm leading-relaxed">{dailyTip}</p>
+              </div>
+            )}
+          </div>
+        </div>
       </main>
     </div>
   );
