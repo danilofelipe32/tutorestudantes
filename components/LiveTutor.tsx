@@ -1,6 +1,3 @@
-
-
-
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { GoogleGenAI, LiveServerMessage, Modality } from '@google/genai';
 import type { Subject } from '../types';
@@ -290,7 +287,7 @@ const LiveTutor: React.FC<LiveTutorProps> = ({ subject, onBack }) => {
             text = 'Conectando';
             break;
         case 'CONNECTED':
-            color = 'bg-green-500';
+            color = 'bg-green-500 animate-pulse-connected';
             text = isBotSpeaking ? 'Falando' : 'Ouvindo';
             break;
         case 'ERROR':
