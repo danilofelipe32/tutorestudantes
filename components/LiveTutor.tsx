@@ -16,6 +16,11 @@ interface LiveTutorProps {
 
 type SessionStatus = 'IDLE' | 'CONNECTING' | 'CONNECTED' | 'ERROR';
 
+interface TranscriptionEntry {
+  sender: 'user' | 'bot';
+  text: string;
+}
+
 const LiveTutor: React.FC<LiveTutorProps> = ({ subject, onBack }) => {
   const [status, setStatus] = useState<SessionStatus>('IDLE');
   const [isBotSpeaking, setIsBotSpeaking] = useState(false);
@@ -23,7 +28,12 @@ const LiveTutor: React.FC<LiveTutorProps> = ({ subject, onBack }) => {
   const [isMuted, setIsMuted] = useState(false);
   const [volume, setVolume] = useState(1); // 0 to 1
 
-  // Usa 'any' para o tipo de sessão, já que 'LiveSession' não é exportado.
+  // State for transcriptions
+  const [currentUserTranscription, setCurrentUserTranscription] = useState('');
+  const [currentBotTranscription, setCurrentBotTranscription] = useState('');
+  const [transcriptionHistory, setTranscriptionHistory] = useState<TranscriptionEntry[]>([]);
+
+  // Refs for managing audio and session state
   const sessionPromiseRef = useRef<Promise<any> | null>(null);
   const inputAudioContextRef = useRef<AudioContext | null>(null);
   const outputAudioContextRef = useRef<AudioContext | null>(null);
@@ -34,9 +44,21 @@ const LiveTutor: React.FC<LiveTutorProps> = ({ subject, onBack }) => {
   const nextStartTimeRef = useRef<number>(0);
   const isMutedRef = useRef(isMuted);
 
+  // Refs for accumulating transcription text to avoid stale state in callbacks
+  const userTranscriptionRef = useRef('');
+  const botTranscriptionRef = useRef('');
+  const historyContainerRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     isMutedRef.current = isMuted;
   }, [isMuted]);
+  
+  useEffect(() => {
+    // Auto-scroll to the bottom of the history
+    if (historyContainerRef.current) {
+      historyContainerRef.current.scrollTop = historyContainerRef.current.scrollHeight;
+    }
+  }, [transcriptionHistory, currentUserTranscription, currentBotTranscription]);
 
   const stopAllAudio = useCallback(() => {
     sourcesRef.current.forEach(source => {
@@ -85,6 +107,11 @@ const LiveTutor: React.FC<LiveTutorProps> = ({ subject, onBack }) => {
     
     setError(null);
     setStatus('CONNECTING');
+    setTranscriptionHistory([]);
+    setCurrentUserTranscription('');
+    setCurrentBotTranscription('');
+    userTranscriptionRef.current = '';
+    botTranscriptionRef.current = '';
     
     try {
       mediaStreamRef.current = await navigator.mediaDevices.getUserMedia({
@@ -117,6 +144,8 @@ const LiveTutor: React.FC<LiveTutorProps> = ({ subject, onBack }) => {
             voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Zephyr' } },
         },
         systemInstruction: `Você é um tutor de ${subject.name} amigável e prestativo para um estudante do ensino médio no Brasil. Fale em português brasileiro. Mantenha suas respostas concisas e guie o aluno a pensar, em vez de dar respostas diretas.`,
+        inputAudioTranscription: {},
+        outputAudioTranscription: {},
       },
       callbacks: {
         onopen: () => {
@@ -171,6 +200,31 @@ const LiveTutor: React.FC<LiveTutorProps> = ({ subject, onBack }) => {
             console.log("Interrupted by user.");
             stopAllAudio();
           }
+
+          if (message.serverContent?.inputTranscription) {
+            userTranscriptionRef.current += message.serverContent.inputTranscription.text;
+            setCurrentUserTranscription(userTranscriptionRef.current);
+          }
+
+          if (message.serverContent?.outputTranscription) {
+            botTranscriptionRef.current += message.serverContent.outputTranscription.text;
+            setCurrentBotTranscription(botTranscriptionRef.current);
+          }
+
+          if (message.serverContent?.turnComplete) {
+            const userText = userTranscriptionRef.current.trim();
+            const botText = botTranscriptionRef.current.trim();
+            setTranscriptionHistory(prev => {
+                const newHistory = [...prev];
+                if (userText) newHistory.push({ sender: 'user', text: userText });
+                if (botText) newHistory.push({ sender: 'bot', text: botText });
+                return newHistory;
+            });
+            userTranscriptionRef.current = '';
+            botTranscriptionRef.current = '';
+            setCurrentUserTranscription('');
+            setCurrentBotTranscription('');
+          }
         },
         onerror: (e: ErrorEvent) => {
           console.error("Session error:", e);
@@ -220,15 +274,29 @@ const LiveTutor: React.FC<LiveTutorProps> = ({ subject, onBack }) => {
     }
   };
 
-  const getStatusText = () => {
-    switch(status) {
-      case 'IDLE': return 'Toque para começar';
-      case 'CONNECTING': return 'Conectando...';
-      case 'CONNECTED':
-        if (isBotSpeaking) return 'Falando...';
-        return 'Ouvindo...';
-      case 'ERROR': return 'Erro na conexão';
+  const getStatusIndicator = () => {
+    let color = 'bg-gray-400';
+    let text = 'Offline';
+    switch (status) {
+        case 'CONNECTING':
+            color = 'bg-yellow-400 animate-pulse';
+            text = 'Conectando';
+            break;
+        case 'CONNECTED':
+            color = 'bg-green-500';
+            text = isBotSpeaking ? 'Falando' : 'Ouvindo';
+            break;
+        case 'ERROR':
+            color = 'bg-red-500';
+            text = 'Erro';
+            break;
     }
+    return (
+        <div className="flex items-center">
+            <span className={`h-2.5 w-2.5 rounded-full ${color} mr-2`}></span>
+            <span className="text-sm text-gray-600">{text}</span>
+        </div>
+    );
   };
 
   const getButtonText = () => {
@@ -238,37 +306,54 @@ const LiveTutor: React.FC<LiveTutorProps> = ({ subject, onBack }) => {
 
   return (
     <div className="flex flex-col h-full bg-gray-50">
-      <header className="flex items-center p-4 bg-white border-b border-gray-200">
-        <button onClick={onBack} className="mr-2 p-2 rounded-full hover:bg-gray-100 disabled:opacity-50" disabled={status === 'CONNECTING'}>
-          <ArrowLeftIcon className="h-6 w-6 text-gray-600" />
-        </button>
+      <header className="flex items-center justify-between p-4 bg-white border-b border-gray-200">
         <div className="flex items-center">
+            <button onClick={onBack} className="mr-2 p-2 rounded-full hover:bg-gray-100 disabled:opacity-50" disabled={status === 'CONNECTING'}>
+              <ArrowLeftIcon className="h-6 w-6 text-gray-600" />
+            </button>
             <div className={'p-2 rounded-full ' + subject.color + '/20'}>
                 <subject.icon className={`h-6 w-6 ${subject.color.replace('bg-', 'text-')}`} />
             </div>
-            <h1 className="font-semibold text-lg ml-3 text-gray-800">Tutor por Voz: {subject.name}</h1>
+            <h1 className="font-semibold text-lg ml-3 text-gray-800">Tutor: {subject.name}</h1>
         </div>
+        {getStatusIndicator()}
       </header>
 
-      <main className="flex-grow p-6 flex flex-col justify-center items-center text-center">
-        <div 
-          className={`relative w-48 h-48 rounded-full flex items-center justify-center transition-all duration-300
-            ${status === 'CONNECTED' ? 'bg-blue-100' : 'bg-gray-200'}
-          `}
-        >
-          <div 
-            className={`absolute w-full h-full rounded-full transition-transform
-              ${isBotSpeaking ? `bg-blue-200 animate-ping` : ''}
-            `}
-            style={{ animationDuration: '1.5s' }}
-          ></div>
-          <MicrophoneIcon className={`h-20 w-20 z-10 transition-colors
-            ${status === 'CONNECTED' ? 'text-blue-500' : 'text-gray-500'}
-            ${isBotSpeaking ? 'text-blue-600' : ''}
-          `} />
-        </div>
-        <p className="mt-8 text-xl font-semibold text-gray-700">{getStatusText()}</p>
-        {error && <p className="mt-2 text-red-500">{error}</p>}
+      <main ref={historyContainerRef} className="flex-grow p-4 overflow-y-auto">
+        {status === 'IDLE' || status === 'ERROR' ? (
+             <div className="h-full flex flex-col justify-center items-center text-center">
+                <MicrophoneIcon className="h-24 w-24 text-gray-300 mb-4"/>
+                <h2 className="text-xl font-bold text-gray-700">Tutor por Voz</h2>
+                <p className="text-gray-500 mt-1 max-w-sm">Converse em tempo real com seu tutor. Pressione 'Iniciar' para começar.</p>
+                {error && <p className="mt-4 text-red-500 bg-red-100 p-3 rounded-lg">{error}</p>}
+            </div>
+        ) : (
+          <div className="space-y-4">
+            {transcriptionHistory.map((entry, index) => (
+              <div key={index} className={`flex ${entry.sender === 'user' ? 'justify-end animate-chat-user' : 'justify-start animate-chat-bot'}`}>
+                <div className={`max-w-xs md:max-w-md px-4 py-3 rounded-2xl ${
+                  entry.sender === 'user' ? `bg-blue-500 text-white rounded-br-lg` : 'bg-gray-200 text-gray-800 rounded-bl-lg'
+                }`}>
+                  <p className="text-sm">{entry.text}</p>
+                </div>
+              </div>
+            ))}
+             {currentUserTranscription && (
+                <div className="flex justify-end animate-fade-in">
+                    <div className="max-w-xs md:max-w-md px-4 py-3 rounded-2xl bg-blue-200 text-blue-800 rounded-br-lg italic">
+                        <p className="text-sm">{currentUserTranscription}</p>
+                    </div>
+                </div>
+            )}
+            {currentBotTranscription && (
+                <div className="flex justify-start animate-fade-in">
+                     <div className="max-w-xs md:max-w-md px-4 py-3 rounded-2xl bg-gray-100 text-gray-500 rounded-bl-lg italic">
+                        <p className="text-sm">{currentBotTranscription}</p>
+                    </div>
+                </div>
+            )}
+          </div>
+        )}
       </main>
 
       <footer className="p-4 bg-white border-t border-gray-200 space-y-4">
@@ -276,6 +361,7 @@ const LiveTutor: React.FC<LiveTutorProps> = ({ subject, onBack }) => {
             <div className="flex items-center justify-between animate-fade-in space-x-4">
                 <button
                     onClick={handleToggleMute}
+                    title={isMuted ? 'Ativar microfone' : 'Desativar microfone'}
                     className={`p-4 rounded-full transition-colors ${
                         isMuted ? 'bg-red-100 text-red-600' : 'bg-gray-200 text-gray-700'
                     }`}
@@ -284,7 +370,7 @@ const LiveTutor: React.FC<LiveTutorProps> = ({ subject, onBack }) => {
                 </button>
                 
                 <div className="flex-grow flex items-center">
-                    <button onClick={handleToggleVolume} className="p-2 mr-2">
+                    <button onClick={handleToggleVolume} className="p-2 mr-2" title={volume > 0 ? 'Mudo' : 'Ativar som'}>
                         {volume > 0 ? <SpeakerWaveIcon className="h-6 w-6 text-gray-600"/> : <SpeakerXMarkIcon className="h-6 w-6 text-gray-600"/>}
                     </button>
                     <input
@@ -295,6 +381,7 @@ const LiveTutor: React.FC<LiveTutorProps> = ({ subject, onBack }) => {
                         value={volume}
                         onChange={handleVolumeChange}
                         className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                        title={`Volume: ${Math.round(volume * 100)}%`}
                     />
                 </div>
             </div>
