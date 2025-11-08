@@ -1,5 +1,4 @@
 
-
 import { GoogleGenAI, Type } from "@google/genai";
 import type { Subject, ExerciseQuestion } from '../types';
 import { offlineExercises } from '../data/offlineExercises';
@@ -80,12 +79,53 @@ export const generateExercise = async (subject: Subject, difficulty: string, isR
     return null;
   }
 
+  const questionTypes = ['multiple-choice', 'fill-in-the-blank', 'true-false'];
+  const selectedType = questionTypes[Math.floor(Math.random() * questionTypes.length)];
+  
+  let prompt = '';
   const promptType = isReview ? 'revisão para fixação de conteúdo' : 'prática';
-  const prompt = `Gere uma questão de ${promptType} de múltipla escolha de nível ${difficulty} sobre ${subject.name} para um estudante do ensino médio no Brasil. O objetivo é testar e reforçar o conhecimento. O formato da resposta deve ser um JSON. A questão deve ser desafiadora, mas justa para o nível selecionado. Forneça 4 opções de resposta (A, B, C, D). Indique qual é a opção correta e forneça uma breve explicação do porquê. Apenas uma opção pode ser correta. Não inclua a formatação de markdown ('''json) na sua resposta, apenas o JSON bruto.`;
+  const basePrompt = `Gere uma questão de ${promptType} de nível ${difficulty} sobre ${subject.name} para um estudante do ensino médio no Brasil. O objetivo é testar e reforçar o conhecimento. O formato da resposta deve ser um JSON. A questão deve ser desafiadora, mas justa para o nível selecionado. Forneça uma breve explicação do porquê a resposta correta está certa. Não inclua a formatação de markdown ('''json) na sua resposta, apenas o JSON bruto.`;
+
+  switch (selectedType) {
+    case 'true-false':
+      prompt = `
+        ${basePrompt}
+        TIPO DE QUESTÃO: Verdadeiro ou Falso.
+        INSTRUÇÕES ADICIONAIS:
+        1. Crie uma afirmação no campo "question".
+        2. O campo "options" deve conter exatamente duas opções: { "id": "a", "text": "Verdadeiro" } e { "id": "b", "text": "Falso" }.
+        3. Defina "correctOptionId" como "a" se a afirmação for verdadeira, ou "b" se for falsa.
+      `;
+      break;
+    case 'fill-in-the-blank':
+      prompt = `
+        ${basePrompt}
+        TIPO DE QUESTÃO: Preencher a Lacuna.
+        INSTRUÇÕES ADICIONAIS:
+        1. Crie uma frase no campo "question" com uma lacuna claramente indicada por "_______".
+        2. No campo "options", forneça 4 opções de resposta (A, B, C, D).
+        3. Uma das opções deve ser a palavra ou frase correta para preencher a lacuna. As outras três devem ser distratores plausíveis.
+        4. Defina "correctOptionId" para o ID da opção correta.
+      `;
+      break;
+    case 'multiple-choice':
+    default:
+      prompt = `
+        ${basePrompt}
+        TIPO DE QUESTÃO: Múltipla Escolha.
+        INSTRUÇÕES ADICIONAIS:
+        1. Crie uma pergunta no campo "question".
+        2. Forneça 4 opções de resposta (A, B, C, D) no campo "options".
+        3. Apenas uma opção pode ser correta.
+        4. Defina "correctOptionId" para o ID da opção correta.
+      `;
+      break;
+  }
+  
   try {
     const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash',
-        contents: prompt,
+        contents: prompt.trim(),
         config: {
             responseMimeType: "application/json",
             responseSchema: {
@@ -120,8 +160,12 @@ export const generateExercise = async (subject: Subject, difficulty: string, isR
     
     const data = JSON.parse(jsonString.trim());
 
-    if (data.options.length !== 4) {
-        throw new Error("Generated exercise does not have 4 options.");
+    if (selectedType === 'true-false' && data.options.length !== 2) {
+      throw new Error("Generated true-false exercise does not have 2 options.");
+    }
+    
+    if (selectedType !== 'true-false' && data.options.length !== 4) {
+        throw new Error(`Generated ${selectedType} exercise does not have 4 options.`);
     }
 
     return data as ExerciseQuestion;
