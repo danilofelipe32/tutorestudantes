@@ -1,4 +1,5 @@
 
+
 import React, { useState, useCallback, useEffect } from 'react';
 import type { Subject } from './types';
 import { Screen } from './types';
@@ -102,7 +103,7 @@ const App: React.FC = () => {
 
   return (
     <div className="w-full min-h-screen bg-gray-50 font-sans">
-      <div className="max-w-md mx-auto bg-white min-h-screen shadow-lg flex flex-col">
+      <div className="max-w-md mx-auto bg-white h-screen shadow-lg flex flex-col">
         <main key={screen} className="animate-fade-in flex-grow">
           {renderScreen()}
         </main>
