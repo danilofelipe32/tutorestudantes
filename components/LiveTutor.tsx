@@ -7,7 +7,7 @@ import { ArrowLeftIcon, MicrophoneIcon, MicrophoneSlashIcon, SpeakerWaveIcon, Sp
 import { createBlob, decode, decodeAudioData } from '../services/audioUtils';
 
 // FIX: The API key must be obtained from the environment variable `process.env.API_KEY`.
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const ai = new GoogleGenAI({ apiKey: "AIzaSyA8z9gxOEp2usOFToxGQV0z7rWtiya2L9o" });
 
 interface LiveTutorProps {
   subject: Subject;

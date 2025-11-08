@@ -5,7 +5,7 @@ import type { Subject, ExerciseQuestion } from '../types';
 import { offlineExercises } from '../data/offlineExercises';
 
 // FIX: The API key must be obtained from the environment variable `process.env.API_KEY`.
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const ai = new GoogleGenAI({ apiKey: "AIzaSyA8z9gxOEp2usOFToxGQV0z7rWtiya2L9o" });
 
 export const getTutorResponse = async (
   subject: Subject,
