@@ -68,13 +68,22 @@ const Exercise: React.FC<ExerciseProps> = ({ subject, onBack }) => {
     oscillator.stop(context.currentTime + 0.1);
   }, []);
 
-  // Efeito de limpeza para áudio e AudioContext
+  // Efeito de limpeza para áudio e AudioContext.
+  // Este hook garante que, quando o componente for desmontado, todos os recursos de áudio
+  // sejam devidamente liberados para evitar vazamentos de memória.
   useEffect(() => {
+    // A função retornada por useEffect é a função de limpeza.
     return () => {
-      stopAudio();
-      if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
-        audioContextRef.current.close().catch(e => console.error("Error closing AudioContext:", e));
+      stopAudio(); // Primeiro, para qualquer áudio que esteja tocando.
+  
+      const contextToClose = audioContextRef.current;
+      // Verifica se o AudioContext existe e se não já foi fechado.
+      if (contextToClose && contextToClose.state !== 'closed') {
+        // Fecha o AudioContext para liberar os recursos de hardware de áudio do sistema.
+        contextToClose.close().catch(e => console.error("Erro ao fechar o AudioContext:", e));
       }
+      // Limpa a referência para garantir que não seja reutilizada acidentalmente.
+      audioContextRef.current = null;
     };
   }, [stopAudio]);
   
