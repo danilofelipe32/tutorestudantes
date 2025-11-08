@@ -1,4 +1,3 @@
-
 import { getAllLearningData } from './learningService';
 import { subjects } from '../data/subjects';
 
@@ -69,4 +68,22 @@ export const requestNotificationPermission = async (): Promise<NotificationPermi
         setupNotificationChecks();
     }
     return permission;
+};
+
+export const scheduleStudyReminder = (subjectName: string, delayInMilliseconds: number): boolean => {
+    if (!('Notification' in window) || Notification.permission !== 'granted') {
+        console.warn('Permissão de notificação não concedida. Não é possível agendar o lembrete.');
+        return false;
+    }
+
+    // Usamos setTimeout. Isso requer que a aba do aplicativo permaneça aberta.
+    setTimeout(() => {
+        new Notification('Lembrete de Estudo', {
+            body: `Está na hora da sua sessão de estudos de ${subjectName} que você agendou!`,
+            icon: '/vite.svg',
+            tag: `study-reminder-${subjectName}-${Date.now()}`,
+        });
+    }, delayInMilliseconds);
+    
+    return true; // Retorna sucesso
 };

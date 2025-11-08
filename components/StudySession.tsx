@@ -1,8 +1,8 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import type { Subject } from '../types';
 import { Screen } from '../types';
 import { ArrowLeftIcon, ClockIcon } from './Icons';
+import { scheduleStudyReminder } from '../services/notificationService';
 
 interface StudySessionProps {
   subject: Subject;
@@ -21,6 +21,14 @@ const StudySession: React.FC<StudySessionProps> = ({ subject, onBack, onNavigate
     const [timeLeft, setTimeLeft] = useState(duration);
     const [isActive, setIsActive] = useState(false);
     const [isFinished, setIsFinished] = useState(false);
+    const [reminderState, setReminderState] = useState<'idle' | 'set'>('idle');
+    const [notificationPermission, setNotificationPermission] = useState('default');
+
+    useEffect(() => {
+        if ('Notification' in window) {
+            setNotificationPermission(Notification.permission);
+        }
+    }, []);
 
     useEffect(() => {
         let interval: number | null = null;
@@ -55,6 +63,7 @@ const StudySession: React.FC<StudySessionProps> = ({ subject, onBack, onNavigate
         setIsActive(false);
         setIsFinished(false);
         setTimeLeft(duration);
+        setReminderState('idle');
     };
 
     const handleDurationChange = (minutes: number) => {
@@ -67,6 +76,16 @@ const StudySession: React.FC<StudySessionProps> = ({ subject, onBack, onNavigate
         if (duration === 0) return 0;
         return ((duration - timeLeft) / duration) * 100;
     }, [timeLeft, duration]);
+
+    const handleSetReminder = (days: number) => {
+        const delayInMilliseconds = days * 24 * 60 * 60 * 1000;
+        const success = scheduleStudyReminder(subject.name, delayInMilliseconds);
+        if (success) {
+            setReminderState('set');
+        } else {
+            alert('Para agendar lembretes, por favor, ative as notificações para este site nas configurações do seu navegador.');
+        }
+    };
 
 
     if (isFinished) {
@@ -103,6 +122,40 @@ const StudySession: React.FC<StudySessionProps> = ({ subject, onBack, onNavigate
                             Iniciar Nova Sessão
                         </button>
                     </div>
+
+                    {notificationPermission === 'granted' && (
+                        <div className="w-full max-w-sm mt-8 pt-6 border-t border-gray-200">
+                            {reminderState === 'idle' ? (
+                                <>
+                                    <h3 className="text-lg font-semibold text-gray-700 text-center mb-3">Agendar lembrete</h3>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        <button
+                                            onClick={() => handleSetReminder(1)}
+                                            className="py-2 px-2 text-sm rounded-md font-semibold transition-colors bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-200"
+                                        >
+                                            Amanhã
+                                        </button>
+                                        <button
+                                            onClick={() => handleSetReminder(3)}
+                                            className="py-2 px-2 text-sm rounded-md font-semibold transition-colors bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-200"
+                                        >
+                                            Em 3 dias
+                                        </button>
+                                        <button
+                                            onClick={() => handleSetReminder(7)}
+                                            className="py-2 px-2 text-sm rounded-md font-semibold transition-colors bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-200"
+                                        >
+                                            Próx. semana
+                                        </button>
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="text-center text-green-700 font-semibold p-3 bg-green-100 border border-green-200 rounded-lg">
+                                    Lembrete agendado com sucesso!
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </main>
             </div>
         );
