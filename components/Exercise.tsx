@@ -1,10 +1,13 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import type { Subject, ExerciseQuestion, Difficulty } from '../types';
+import { GoogleGenAI, Modality } from '@google/genai';
+import { decode, decodeAudioData } from '../services/audioUtils';
 import { generateExercise } from '../services/geminiService';
 import { getLearningDataForSubject, updateLearningDataForSubject } from '../services/learningService';
 import { saveExerciseAttempt } from '../services/exerciseHistoryService';
-import { ArrowLeftIcon, QuestionMarkIcon } from './Icons';
+import { ArrowLeftIcon, QuestionMarkIcon, SpeakerWaveIcon } from './Icons';
 
 interface ExerciseProps {
   subject: Subject;
@@ -27,13 +30,104 @@ const Exercise: React.FC<ExerciseProps> = ({ subject, onBack }) => {
   const [isReviewMode, setIsReviewMode] = useState(false);
   const [showExplanation, setShowExplanation] = useState(false);
 
+  // State para TTS
+  const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
+  const [isFetchingAudio, setIsFetchingAudio] = useState(false);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const audioSourceRef = useRef<AudioBufferSourceNode | null>(null);
+
+  const stopAudio = useCallback(() => {
+    if (audioSourceRef.current) {
+      audioSourceRef.current.onended = null;
+      audioSourceRef.current.stop();
+      audioSourceRef.current = null;
+    }
+    setCurrentlyPlaying(null);
+    setIsFetchingAudio(false);
+  }, []);
+
+  // Efeito de limpeza para áudio e AudioContext
+  useEffect(() => {
+    return () => {
+      stopAudio();
+      if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+        audioContextRef.current.close().catch(e => console.error("Error closing AudioContext:", e));
+      }
+    };
+  }, [stopAudio]);
+  
+  const handleSpeak = async (text: string, id: string) => {
+    if (currentlyPlaying === id) {
+      stopAudio();
+      return;
+    }
+    if (isFetchingAudio) {
+      stopAudio();
+    }
+  
+    try {
+      setIsFetchingAudio(true);
+      setCurrentlyPlaying(id);
+  
+      const ai = new GoogleGenAI({ apiKey: "AIzaSyA8z9gxOEp2usOFToxGQV0z7rWtiya2L9o" });
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash-preview-tts",
+        contents: [{ parts: [{ text }] }],
+        config: {
+          responseModalities: [Modality.AUDIO],
+          speechConfig: {
+            voiceConfig: {
+              prebuiltVoiceConfig: { voiceName: 'Kore' }, // Voz clara e neutra
+            },
+          },
+        },
+      });
+  
+      const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+      if (!base64Audio) throw new Error("Nenhum dado de áudio recebido.");
+  
+      if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
+        const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+        audioContextRef.current = new AudioContext({ sampleRate: 24000 });
+      }
+  
+      const audioBuffer = await decodeAudioData(
+        decode(base64Audio),
+        audioContextRef.current,
+        24000,
+        1,
+      );
+  
+      const source = audioContextRef.current.createBufferSource();
+      source.buffer = audioBuffer;
+      source.connect(audioContextRef.current.destination);
+      source.onended = () => {
+        if (audioSourceRef.current === source) {
+            setCurrentlyPlaying(null);
+            audioSourceRef.current = null;
+        }
+      };
+  
+      source.start();
+      audioSourceRef.current = source;
+    } catch (e) {
+      console.error("Erro ao reproduzir áudio:", e);
+      setError("Não foi possível reproduzir o áudio.");
+      setCurrentlyPlaying(null);
+    } finally {
+      setIsFetchingAudio(false);
+    }
+  };
+
+
   const fetchQuestion = useCallback(async () => {
+    stopAudio(); // Para o áudio ao buscar nova questão
     setLoading(true);
     setIsVerified(false);
     setSelectedOptionId(null);
     setQuestion(null);
     setError(null);
-    setShowExplanation(false); // Reseta a visibilidade da explicação
+    setShowExplanation(false);
 
     const learningData = getLearningDataForSubject(subject.id);
     const needsReview = learningData.nextReviewDate > 0 && Date.now() >= learningData.nextReviewDate;
@@ -48,7 +142,7 @@ const Exercise: React.FC<ExerciseProps> = ({ subject, onBack }) => {
       setError("Não foi possível gerar um exercício. Tente novamente.");
     }
     setLoading(false);
-  }, [subject]);
+  }, [subject, stopAudio]);
 
   useEffect(() => {
     fetchQuestion();
@@ -57,13 +151,11 @@ const Exercise: React.FC<ExerciseProps> = ({ subject, onBack }) => {
   const handleSelectAndVerify = (optionId: string) => {
     if (isVerified || !question) return;
 
+    stopAudio(); // Para o áudio ao selecionar uma resposta
     setSelectedOptionId(optionId);
     const isCorrect = optionId === question.correctOptionId;
     
-    // Atualiza as estatísticas de aprendizado geral
     updateLearningDataForSubject(subject.id, isCorrect);
-    
-    // Salva a tentativa específica no histórico
     saveExerciseAttempt(subject.id, question, optionId, isCorrect);
 
     setIsVerified(true);
@@ -102,15 +194,27 @@ const Exercise: React.FC<ExerciseProps> = ({ subject, onBack }) => {
         {question && !loading && (
           <div>
             <div className="flex items-start mb-4">
-              <div className="p-2 bg-gray-100 rounded-lg mr-3">
+              <div className="p-2 bg-gray-100 rounded-lg mr-3 flex-shrink-0">
                 <QuestionMarkIcon className="h-6 w-6 text-gray-600" />
               </div>
-              <div>
+              <div className="flex-grow">
                 <p className="text-sm font-semibold text-gray-500">
                   {isReviewMode ? 'REVISÃO' : 'QUESTÃO'} - {difficulty.toUpperCase()}
                 </p>
                 <h2 className="text-lg font-semibold text-gray-800 mt-1">{question.question}</h2>
               </div>
+              <button
+                onClick={() => handleSpeak(question.question, 'question')}
+                disabled={isFetchingAudio && currentlyPlaying !== 'question'}
+                className="ml-4 p-2 rounded-full hover:bg-gray-200 transition-colors flex-shrink-0 disabled:opacity-50"
+                aria-label="Ouvir a pergunta"
+              >
+                {isFetchingAudio && currentlyPlaying === 'question' ? (
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+                ) : (
+                    <SpeakerWaveIcon className={`h-6 w-6 ${currentlyPlaying === 'question' ? 'text-blue-500' : 'text-gray-500'}`} />
+                )}
+              </button>
             </div>
             
             <div className="space-y-3 mt-6">
@@ -124,7 +228,21 @@ const Exercise: React.FC<ExerciseProps> = ({ subject, onBack }) => {
                   <div className={`flex-shrink-0 h-8 w-8 rounded-full border-2 flex items-center justify-center mr-4 font-bold ${selectedOptionId === option.id || (isVerified && option.id === question.correctOptionId) ? 'border-current' : 'border-gray-300'} text-gray-600`}>
                     {String.fromCharCode(65 + index)}
                   </div>
-                  <span>{option.text}</span>
+                  <span className="flex-grow mr-2">{option.text}</span>
+                  <div onClick={(e) => e.stopPropagation()} className="relative">
+                      <button
+                        onClick={() => handleSpeak(option.text, option.id)}
+                        disabled={isFetchingAudio && currentlyPlaying !== option.id}
+                        className="p-2 rounded-full hover:bg-gray-100 transition-colors flex-shrink-0 disabled:opacity-50"
+                        aria-label={`Ouvir a opção ${String.fromCharCode(65 + index)}`}
+                      >
+                        {isFetchingAudio && currentlyPlaying === option.id ? (
+                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
+                        ) : (
+                          <SpeakerWaveIcon className={`h-5 w-5 ${currentlyPlaying === option.id ? 'text-blue-500' : 'text-gray-500'}`} />
+                        )}
+                      </button>
+                    </div>
                 </button>
               ))}
             </div>
