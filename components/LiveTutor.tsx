@@ -87,7 +87,13 @@ const LiveTutor: React.FC<LiveTutorProps> = ({ subject, onBack }) => {
     setStatus('CONNECTING');
     
     try {
-      mediaStreamRef.current = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaStreamRef.current = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
+      });
     } catch (err) {
       console.error("Microphone access denied:", err);
       setError("Permissão para usar o microfone foi negada. Por favor, habilite nas configurações do seu navegador.");
