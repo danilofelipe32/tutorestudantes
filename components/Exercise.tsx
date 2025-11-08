@@ -45,6 +45,29 @@ const Exercise: React.FC<ExerciseProps> = ({ subject, onBack }) => {
     setPlayingAudioId(null);
   }, []);
 
+  const playClickSound = useCallback(() => {
+    if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
+        const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+        audioContextRef.current = new AudioContext({ sampleRate: 24000 });
+    }
+    const context = audioContextRef.current;
+    if (context.state === 'suspended') {
+      context.resume();
+    }
+    const oscillator = context.createOscillator();
+    const gainNode = context.createGain();
+
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(600, context.currentTime);
+    gainNode.gain.setValueAtTime(0.1, context.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.1);
+
+    oscillator.connect(gainNode);
+    gainNode.connect(context.destination);
+    oscillator.start(context.currentTime);
+    oscillator.stop(context.currentTime + 0.1);
+  }, []);
+
   // Efeito de limpeza para áudio e AudioContext
   useEffect(() => {
     return () => {
@@ -56,6 +79,8 @@ const Exercise: React.FC<ExerciseProps> = ({ subject, onBack }) => {
   }, [stopAudio]);
   
   const handleSpeak = async (text: string, id: string) => {
+    playClickSound();
+
     // Se o áudio que está tocando for clicado novamente, pare-o.
     if (playingAudioId === id) {
       stopAudio();
@@ -95,6 +120,10 @@ const Exercise: React.FC<ExerciseProps> = ({ subject, onBack }) => {
       if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
         const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
         audioContextRef.current = new AudioContext({ sampleRate: 24000 });
+      }
+
+      if (audioContextRef.current.state === 'suspended') {
+        await audioContextRef.current.resume();
       }
   
       const audioBuffer = await decodeAudioData(
@@ -219,7 +248,7 @@ const Exercise: React.FC<ExerciseProps> = ({ subject, onBack }) => {
                 {fetchingAudioId === 'question' ? (
                     <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
                 ) : (
-                    <SpeakerWaveIcon className={`h-6 w-6 ${playingAudioId === 'question' ? 'text-blue-500' : 'text-gray-500'}`} />
+                    <SpeakerWaveIcon className={`h-6 w-6 transition-transform ${playingAudioId === 'question' ? 'text-blue-500 animate-pulse-speaker' : 'text-gray-500'}`} />
                 )}
               </button>
             </div>
@@ -246,7 +275,7 @@ const Exercise: React.FC<ExerciseProps> = ({ subject, onBack }) => {
                         {fetchingAudioId === option.id ? (
                           <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
                         ) : (
-                          <SpeakerWaveIcon className={`h-5 w-5 ${playingAudioId === option.id ? 'text-blue-500' : 'text-gray-500'}`} />
+                          <SpeakerWaveIcon className={`h-5 w-5 transition-transform ${playingAudioId === option.id ? 'text-blue-500 animate-pulse-speaker' : 'text-gray-500'}`} />
                         )}
                       </button>
                     </div>
