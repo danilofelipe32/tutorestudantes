@@ -213,16 +213,27 @@ const LiveTutor: React.FC<LiveTutorProps> = ({ subject, onBack }) => {
           if (message.serverContent?.turnComplete) {
             const userText = userTranscriptionRef.current.trim();
             const botText = botTranscriptionRef.current.trim();
-            setTranscriptionHistory(prev => {
-                const newHistory = [...prev];
-                if (userText) newHistory.push({ sender: 'user', text: userText });
-                if (botText) newHistory.push({ sender: 'bot', text: botText });
-                return newHistory;
-            });
-            userTranscriptionRef.current = '';
-            botTranscriptionRef.current = '';
+
+            // Limpa as transcrições temporárias "em progresso" da UI
             setCurrentUserTranscription('');
             setCurrentBotTranscription('');
+
+            // Adiciona as transcrições completas do usuário e do bot ao histórico permanente
+            setTranscriptionHistory(prev => {
+                const newHistory = [...prev];
+                if (userText) {
+                    newHistory.push({ sender: 'user', text: userText });
+                }
+                if (botText) {
+                    // Isso garante que apenas o texto final e completo do bot seja adicionado ao histórico.
+                    newHistory.push({ sender: 'bot', text: botText });
+                }
+                return newHistory;
+            });
+
+            // Reseta as refs que acumulam texto para a próxima rodada
+            userTranscriptionRef.current = '';
+            botTranscriptionRef.current = '';
           }
         },
         onerror: (e: ErrorEvent) => {
