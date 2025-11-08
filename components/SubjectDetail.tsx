@@ -176,7 +176,7 @@ const SubjectDetail: React.FC<SubjectDetailProps> = ({ subject, onNavigateTo, on
                             onClick={() => handleLearningStyleSelect(style)}
                             className={`py-2 px-2 text-sm rounded-md font-semibold transition-colors border-2 ${
                                 learningStyle === style
-                                ? `${subject.color.replace('bg-', 'border-').replace('brand', 'blue-500')} ${subject.color.replace('bg-','bg-')}/10 text-${subject.color.replace('bg-', '')}-700`
+                                ? `border-blue-500 bg-blue-500/10 text-blue-700`
                                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border-transparent'
                             }`}
                             >
