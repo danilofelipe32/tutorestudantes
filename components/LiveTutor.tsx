@@ -1,5 +1,6 @@
 
 
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { GoogleGenAI, LiveServerMessage, Modality } from '@google/genai';
 import type { Subject } from '../types';
@@ -27,6 +28,7 @@ const LiveTutor: React.FC<LiveTutorProps> = ({ subject, onBack }) => {
   const [error, setError] = useState<string | null>(null);
   const [isMuted, setIsMuted] = useState(false);
   const [volume, setVolume] = useState(1); // 0 to 1
+  const [showEndSessionConfirm, setShowEndSessionConfirm] = useState(false);
 
   // State for transcriptions
   const [currentUserTranscription, setCurrentUserTranscription] = useState('');
@@ -250,8 +252,13 @@ const LiveTutor: React.FC<LiveTutorProps> = ({ subject, onBack }) => {
     if (status === 'IDLE' || status === 'ERROR') {
       startSession();
     } else {
-      cleanup();
+      setShowEndSessionConfirm(true);
     }
+  };
+
+  const handleConfirmEndSession = () => {
+    cleanup();
+    setShowEndSessionConfirm(false);
   };
 
   const handleToggleMute = () => {
@@ -305,7 +312,7 @@ const LiveTutor: React.FC<LiveTutorProps> = ({ subject, onBack }) => {
   }
 
   return (
-    <div className="flex flex-col h-full bg-gray-50">
+    <div className="flex flex-col h-full bg-gray-50 relative">
       <header className="flex items-center justify-between p-4 bg-white border-b border-gray-200">
         <div className="flex items-center">
             <button onClick={onBack} className="mr-2 p-2 rounded-full hover:bg-gray-100 disabled:opacity-50" disabled={status === 'CONNECTING'}>
@@ -396,6 +403,29 @@ const LiveTutor: React.FC<LiveTutorProps> = ({ subject, onBack }) => {
           {getButtonText()}
         </button>
       </footer>
+
+      {showEndSessionConfirm && (
+        <div className="absolute inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 animate-fade-in">
+            <div className="bg-white rounded-2xl p-6 m-4 max-w-sm w-full shadow-lg text-center animate-fade-in-up">
+                <h3 className="text-xl font-bold text-gray-800">Encerrar Sessão?</h3>
+                <p className="text-gray-600 my-4">Tem certeza de que deseja encerrar a sessão de voz com o tutor?</p>
+                <div className="flex justify-center space-x-4">
+                    <button
+                        onClick={() => setShowEndSessionConfirm(false)}
+                        className="w-full font-semibold py-2 px-4 rounded-xl transition-colors bg-gray-200 text-gray-800 hover:bg-gray-300"
+                    >
+                        Cancelar
+                    </button>
+                    <button
+                        onClick={handleConfirmEndSession}
+                        className="w-full font-semibold py-2 px-4 rounded-xl transition-colors bg-red-500 text-white hover:bg-red-600"
+                    >
+                        Encerrar
+                    </button>
+                </div>
+            </div>
+        </div>
+      )}
     </div>
   );
 };
