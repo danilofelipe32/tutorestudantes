@@ -24,6 +24,8 @@ const getGradientClasses = (colorClass: string) => {
   }
 };
 
+const LEARNING_STYLE_KEY_PREFIX = 'tutorIaLearningStyle';
+
 const SubjectDetail: React.FC<SubjectDetailProps> = ({ subject, onNavigateTo, onBack }) => {
   const [learningGoal, setLearningGoal] = useState('');
   const [learningStyle, setLearningStyle] = useState('');
@@ -35,7 +37,24 @@ const SubjectDetail: React.FC<SubjectDetailProps> = ({ subject, onNavigateTo, on
     setHasChatHistory(chatHistory.length > 0);
     const exerciseHistory = getExerciseHistoryForSubject(subject.id);
     setHasExerciseHistory(exerciseHistory.length > 0);
+    
+    // Carrega o estilo de aprendizado salvo para esta matéria
+    const savedStyle = localStorage.getItem(`${LEARNING_STYLE_KEY_PREFIX}_${subject.id}`);
+    if (savedStyle) {
+      setLearningStyle(savedStyle);
+    }
   }, [subject.id]);
+
+  const handleLearningStyleSelect = (style: string) => {
+    const newStyle = learningStyle === style ? '' : style;
+    setLearningStyle(newStyle);
+    if (newStyle) {
+      localStorage.setItem(`${LEARNING_STYLE_KEY_PREFIX}_${subject.id}`, newStyle);
+    } else {
+      // Remove a chave se o usuário desmarcar a opção
+      localStorage.removeItem(`${LEARNING_STYLE_KEY_PREFIX}_${subject.id}`);
+    }
+  };
 
   const actionButtons = [
     {
@@ -154,7 +173,7 @@ const SubjectDetail: React.FC<SubjectDetailProps> = ({ subject, onNavigateTo, on
                         {['Visual', 'Auditivo', 'Cinestésico'].map(style => (
                             <button
                             key={style}
-                            onClick={() => setLearningStyle(prev => prev === style ? '' : style)}
+                            onClick={() => handleLearningStyleSelect(style)}
                             className={`py-2 px-2 text-sm rounded-md font-semibold transition-colors border-2 ${
                                 learningStyle === style
                                 ? `${subject.color.replace('bg-', 'border-').replace('brand', 'blue-500')} ${subject.color.replace('bg-','bg-')}/10 text-${subject.color.replace('bg-', '')}-700`
