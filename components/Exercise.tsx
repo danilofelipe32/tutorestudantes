@@ -31,8 +31,8 @@ const Exercise: React.FC<ExerciseProps> = ({ subject, onBack }) => {
   const [showExplanation, setShowExplanation] = useState(false);
 
   // State para TTS
-  const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
-  const [isFetchingAudio, setIsFetchingAudio] = useState(false);
+  const [fetchingAudioId, setFetchingAudioId] = useState<string | null>(null);
+  const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const audioSourceRef = useRef<AudioBufferSourceNode | null>(null);
 
@@ -42,8 +42,7 @@ const Exercise: React.FC<ExerciseProps> = ({ subject, onBack }) => {
       audioSourceRef.current.stop();
       audioSourceRef.current = null;
     }
-    setCurrentlyPlaying(null);
-    setIsFetchingAudio(false);
+    setPlayingAudioId(null);
   }, []);
 
   // Efeito de limpeza para áudio e AudioContext
@@ -57,17 +56,24 @@ const Exercise: React.FC<ExerciseProps> = ({ subject, onBack }) => {
   }, [stopAudio]);
   
   const handleSpeak = async (text: string, id: string) => {
-    if (currentlyPlaying === id) {
+    // Se o áudio que está tocando for clicado novamente, pare-o.
+    if (playingAudioId === id) {
       stopAudio();
       return;
     }
-    if (isFetchingAudio) {
+  
+    // Se outro áudio estiver tocando, pare-o antes de iniciar o novo.
+    if (playingAudioId) {
       stopAudio();
+    }
+    
+    // Não permita uma nova busca se uma já estiver em andamento.
+    if (fetchingAudioId) {
+        return;
     }
   
     try {
-      setIsFetchingAudio(true);
-      setCurrentlyPlaying(id);
+      setFetchingAudioId(id);
   
       const ai = new GoogleGenAI({ apiKey: "AIzaSyA8z9gxOEp2usOFToxGQV0z7rWtiya2L9o" });
       const response = await ai.models.generateContent({
@@ -103,19 +109,20 @@ const Exercise: React.FC<ExerciseProps> = ({ subject, onBack }) => {
       source.connect(audioContextRef.current.destination);
       source.onended = () => {
         if (audioSourceRef.current === source) {
-            setCurrentlyPlaying(null);
+            setPlayingAudioId(null);
             audioSourceRef.current = null;
         }
       };
   
       source.start();
       audioSourceRef.current = source;
+      setPlayingAudioId(id); // O áudio agora está tocando.
     } catch (e) {
       console.error("Erro ao reproduzir áudio:", e);
       setError("Não foi possível reproduzir o áudio.");
-      setCurrentlyPlaying(null);
+      setPlayingAudioId(null);
     } finally {
-      setIsFetchingAudio(false);
+      setFetchingAudioId(null); // A busca terminou (com sucesso ou falha).
     }
   };
 
@@ -205,14 +212,14 @@ const Exercise: React.FC<ExerciseProps> = ({ subject, onBack }) => {
               </div>
               <button
                 onClick={() => handleSpeak(question.question, 'question')}
-                disabled={isFetchingAudio && currentlyPlaying !== 'question'}
+                disabled={fetchingAudioId !== null}
                 className="ml-4 p-2 rounded-full hover:bg-gray-200 transition-colors flex-shrink-0 disabled:opacity-50"
                 aria-label="Ouvir a pergunta"
               >
-                {isFetchingAudio && currentlyPlaying === 'question' ? (
+                {fetchingAudioId === 'question' ? (
                     <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
                 ) : (
-                    <SpeakerWaveIcon className={`h-6 w-6 ${currentlyPlaying === 'question' ? 'text-blue-500' : 'text-gray-500'}`} />
+                    <SpeakerWaveIcon className={`h-6 w-6 ${playingAudioId === 'question' ? 'text-blue-500' : 'text-gray-500'}`} />
                 )}
               </button>
             </div>
@@ -232,14 +239,14 @@ const Exercise: React.FC<ExerciseProps> = ({ subject, onBack }) => {
                   <div onClick={(e) => e.stopPropagation()} className="relative">
                       <button
                         onClick={() => handleSpeak(option.text, option.id)}
-                        disabled={isFetchingAudio && currentlyPlaying !== option.id}
+                        disabled={fetchingAudioId !== null}
                         className="p-2 rounded-full hover:bg-gray-100 transition-colors flex-shrink-0 disabled:opacity-50"
                         aria-label={`Ouvir a opção ${String.fromCharCode(65 + index)}`}
                       >
-                        {isFetchingAudio && currentlyPlaying === option.id ? (
+                        {fetchingAudioId === option.id ? (
                           <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
                         ) : (
-                          <SpeakerWaveIcon className={`h-5 w-5 ${currentlyPlaying === option.id ? 'text-blue-500' : 'text-gray-500'}`} />
+                          <SpeakerWaveIcon className={`h-5 w-5 ${playingAudioId === option.id ? 'text-blue-500' : 'text-gray-500'}`} />
                         )}
                       </button>
                     </div>
