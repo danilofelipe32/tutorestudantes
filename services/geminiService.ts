@@ -5,7 +5,7 @@ import type { Subject, ExerciseQuestion } from '../types';
 import { offlineExercises } from '../data/offlineExercises';
 
 // Chave de API para fase de testes
-const ai = new GoogleGenAI({ apiKey: "COLOQUE_SUA_CHAVE_AQUI" });
+const ai = new GoogleGenAI({ apiKey: "AIzaSyA8z9gxOEp2usOFToxGQV0z7rWtiya2L9o" });
 
 export const getTutorResponse = async (
   subject: Subject,

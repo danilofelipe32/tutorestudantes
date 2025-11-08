@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { GoogleGenAI, LiveServerMessage, Modality } from '@google/genai';
 import type { Subject } from '../types';
@@ -6,7 +7,7 @@ import { ArrowLeftIcon, MicrophoneIcon, MicrophoneSlashIcon, SpeakerWaveIcon, Sp
 import { createBlob, decode, decodeAudioData } from '../services/audioUtils';
 
 // Chave de API para fase de testes
-const ai = new GoogleGenAI({ apiKey: "COLOQUE_SUA_CHAVE_AQUI" });
+const ai = new GoogleGenAI({ apiKey: "AIzaSyA8z9gxOEp2usOFToxGQV0z7rWtiya2L9o" });
 
 interface LiveTutorProps {
   subject: Subject;
