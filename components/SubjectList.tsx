@@ -175,7 +175,7 @@ const SubjectList: React.FC<SubjectListProps> = ({ onSelectSubject }) => {
       <header className="pt-8 pb-6">
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-4xl font-extrabold text-gray-800">
+            <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-800">
               Olá, Estudante! <span role="img" aria-label="waving hand">👋</span>
             </h1>
             <p className="text-gray-500 mt-2">Escolha uma matéria para começar a estudar</p>

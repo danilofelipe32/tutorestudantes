@@ -70,6 +70,12 @@
       .animate-chat-bot {
         animation: chatBotIn 0.3s ease-out forwards;
       }
+      /* Otimizações para Mobile */
+      body {
+        overscroll-behavior-y: contain; /* Previne o "pull-to-refresh" */
+        -webkit-tap-highlight-color: transparent; /* Remove o highlight azul ao tocar em links/botões no iOS */
+        touch-action: manipulation; /* Remove o atraso de 300ms em toques */
+      }
     </style>
   <script type="importmap">
 {

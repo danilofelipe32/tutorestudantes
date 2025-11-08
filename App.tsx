@@ -109,8 +109,8 @@ const App: React.FC = () => {
 
   return (
     <div className="w-full min-h-screen bg-gray-50 font-sans">
-      <div className="max-w-md mx-auto bg-white h-screen shadow-lg flex flex-col">
-        <main key={screen} className="animate-fade-in flex-grow">
+      <div className="max-w-md mx-auto bg-white min-h-screen shadow-lg flex flex-col">
+        <main key={screen} className="animate-fade-in-up flex-grow">
           {renderScreen()}
         </main>
         <footer className="p-3 text-center text-sm text-gray-500 bg-white border-t border-gray-100 flex-shrink-0">

@@ -363,7 +363,7 @@ const LiveTutor: React.FC<LiveTutorProps> = ({ subject, onBack }) => {
                     onClick={handleToggleMute}
                     title={isMuted ? 'Ativar microfone' : 'Desativar microfone'}
                     className={`p-4 rounded-full transition-colors ${
-                        isMuted ? 'bg-red-100 text-red-600' : 'bg-gray-200 text-gray-700'
+                        isMuted ? 'bg-red-500 text-white' : 'bg-gray-200 text-gray-700'
                     }`}
                 >
                     {isMuted ? <MicrophoneSlashIcon className="h-6 w-6"/> : <MicrophoneIcon className="h-6 w-6"/>}

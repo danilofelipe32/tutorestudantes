@@ -1,4 +1,5 @@
 
+
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import type { Subject, Message } from '../types';
 import { getTutorResponse } from '../services/geminiService';
@@ -93,7 +94,7 @@ const TutorChat: React.FC<TutorChatProps> = ({ subject, onBack, learningGoal, le
         </div>
       </header>
       
-      <main className="flex-grow p-4 overflow-y-auto">
+      <main className="flex-grow p-4 overflow-y-auto overscroll-contain">
         <div className="space-y-4">
           {messages.map((msg) => (
             <div key={msg.id} className={`flex ${
@@ -132,7 +133,7 @@ const TutorChat: React.FC<TutorChatProps> = ({ subject, onBack, learningGoal, le
           <button
             onClick={handleSend}
             disabled={isLoading || input.trim() === ''}
-            className="p-2 bg-blue-500 rounded-full disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-600 transition-colors"
+            className="p-3 bg-blue-500 rounded-full disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-600 transition-colors"
           >
             <SendIcon className="h-6 w-6 text-white" />
           </button>
