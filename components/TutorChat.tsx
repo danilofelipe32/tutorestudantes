@@ -38,6 +38,29 @@ const TutorChat: React.FC<TutorChatProps> = ({ subject, onBack, learningGoal, le
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const autoSaveKey = `tutorChatInput_${subject.id}`;
+
+  // Load saved input on mount
+  useEffect(() => {
+    const savedInput = localStorage.getItem(autoSaveKey);
+    if (savedInput) {
+        setInput(savedInput);
+    }
+  }, [autoSaveKey]);
+
+  // Save input every 15 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+        if (input.trim()) {
+            localStorage.setItem(autoSaveKey, input);
+        } else {
+            localStorage.removeItem(autoSaveKey);
+        }
+    }, 15000);
+
+    return () => clearInterval(interval);
+  }, [input, autoSaveKey]);
+
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -52,7 +75,10 @@ const TutorChat: React.FC<TutorChatProps> = ({ subject, onBack, learningGoal, le
 
     const userMessage: Message = { id: Date.now().toString(), text: input, sender: 'user' };
     setMessages(prev => [...prev, userMessage, { id: 'typing', text: '...', sender: 'bot', isTyping: true }]);
+    
+    const textToSend = input;
     setInput('');
+    localStorage.removeItem(autoSaveKey); // Clear saved input on send
     setIsLoading(true);
 
     const messageHistory: Content[] = messages.map(msg => ({
@@ -60,12 +86,12 @@ const TutorChat: React.FC<TutorChatProps> = ({ subject, onBack, learningGoal, le
       parts: [{ text: msg.text }]
     }));
 
-    const botResponseText = await getTutorResponse(subject, messageHistory, input, learningGoal, learningStyle);
+    const botResponseText = await getTutorResponse(subject, messageHistory, textToSend, learningGoal, learningStyle);
 
     const botMessage: Message = { id: (Date.now() + 1).toString(), text: botResponseText, sender: 'bot' };
     setMessages(prev => prev.filter(m => !m.isTyping).concat(botMessage));
     setIsLoading(false);
-  }, [input, isLoading, messages, subject, learningGoal, learningStyle]);
+  }, [input, isLoading, messages, subject, learningGoal, learningStyle, autoSaveKey]);
 
   const handleBack = () => {
     // Apenas salva o histórico se houver mais do que a mensagem inicial e uma resposta.

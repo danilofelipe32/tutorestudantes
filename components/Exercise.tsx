@@ -170,9 +170,38 @@ const Exercise: React.FC<ExerciseProps> = ({ subject, onBack }) => {
     setLoading(false);
   }, [subject, stopAudio]);
 
+  // Restore unfinished exercise on mount, or fetch a new one
   useEffect(() => {
+    const autoSaveKey = `exerciseState_${subject.id}`;
+    const savedStateJSON = localStorage.getItem(autoSaveKey);
+
+    if (savedStateJSON) {
+        try {
+            const savedQuestion = JSON.parse(savedStateJSON) as ExerciseQuestion;
+            if (savedQuestion.question && savedQuestion.options) {
+                setQuestion(savedQuestion);
+                setLoading(false);
+                return; 
+            }
+        } catch (e) {
+            console.error("Failed to parse saved exercise state:", e);
+            localStorage.removeItem(autoSaveKey);
+        }
+    }
+    
     fetchQuestion();
-  }, [fetchQuestion]);
+  }, [fetchQuestion, subject.id]);
+
+  // Save unanswered question state, and clear when answered
+  useEffect(() => {
+      const autoSaveKey = `exerciseState_${subject.id}`;
+      if (question && !isVerified) {
+          localStorage.setItem(autoSaveKey, JSON.stringify(question));
+      } else if (isVerified) {
+          localStorage.removeItem(autoSaveKey);
+      }
+  }, [question, isVerified, subject.id]);
+
 
   const handleSelectAndVerify = (optionId: string) => {
     if (isVerified || !question) return;
