@@ -15,6 +15,8 @@ const StudyTopics: React.FC<StudyTopicsProps> = ({ subject, onBack, onNavigateTo
   const [topics, setTopics] = useState<StudyTopic[]>([]);
   const [newTopicTitle, setNewTopicTitle] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [draggedTopicId, setDraggedTopicId] = useState<string | null>(null);
+  const [dropTargetId, setDropTargetId] = useState<string | null>(null);
 
   const loadTopics = useCallback(() => {
     setIsLoading(true);
@@ -62,6 +64,53 @@ const StudyTopics: React.FC<StudyTopicsProps> = ({ subject, onBack, onNavigateTo
     setIsLoading(false);
   };
 
+  // --- Drag and Drop Handlers ---
+  const handleDragStart = (e: React.DragEvent, topicId: string) => {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', topicId);
+    setDraggedTopicId(topicId);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault(); // Necessary to allow dropping
+  };
+  
+  const handleDragEnter = (e: React.DragEvent, topicId: string) => {
+    e.preventDefault();
+    if (topicId !== draggedTopicId) {
+        setDropTargetId(topicId);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent, dropOnTopicId: string) => {
+    e.preventDefault();
+    if (!draggedTopicId || draggedTopicId === dropOnTopicId) {
+        setDropTargetId(null);
+        setDraggedTopicId(null);
+        return;
+    }
+
+    const reorderedTopics = [...topics];
+    const draggedItem = reorderedTopics.find(t => t.id === draggedTopicId);
+    if (!draggedItem) return;
+
+    const itemsWithoutDragged = reorderedTopics.filter(t => t.id !== draggedTopicId);
+    const dropIndex = itemsWithoutDragged.findIndex(t => t.id === dropOnTopicId);
+
+    // Insert the dragged item at the drop target's position
+    itemsWithoutDragged.splice(dropIndex, 0, draggedItem);
+    
+    handleSave(itemsWithoutDragged);
+    setDraggedTopicId(null);
+    setDropTargetId(null);
+  };
+  
+  const handleDragEnd = () => {
+      setDraggedTopicId(null);
+      setDropTargetId(null);
+  };
+
+
   return (
     <div className="flex flex-col h-full bg-gray-50">
       <header className="flex items-center p-4 bg-white border-b border-gray-200 sticky top-0 z-10">
@@ -104,7 +153,21 @@ const StudyTopics: React.FC<StudyTopicsProps> = ({ subject, onBack, onNavigateTo
           ) : (
             <ul className="space-y-2">
               {topics.map(topic => (
-                <li key={topic.id} className="bg-white p-2 rounded-xl shadow-sm border border-gray-100 flex items-center">
+                <li 
+                  key={topic.id} 
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, topic.id)}
+                  onDragOver={handleDragOver}
+                  onDragEnter={(e) => handleDragEnter(e, topic.id)}
+                  onDrop={(e) => handleDrop(e, topic.id)}
+                  onDragEnd={handleDragEnd}
+                  className={`bg-white p-2 rounded-xl shadow-sm border flex items-center relative transition-all duration-200 cursor-grab active:cursor-grabbing
+                    ${draggedTopicId === topic.id ? 'opacity-40' : 'opacity-100'}
+                    ${dropTargetId === topic.id ? 'border-blue-500' : 'border-gray-100'}`}
+                >
+                   {dropTargetId === topic.id && draggedTopicId !== topic.id && (
+                    <div className="absolute -top-1.5 left-2 right-2 h-1 bg-blue-500 rounded-full" />
+                  )}
                   <button onClick={() => handleToggleComplete(topic.id)} className="p-2">
                     <CheckCircleIcon className={`h-6 w-6 transition-colors ${topic.completed ? 'text-green-500' : 'text-gray-300'}`} />
                   </button>
