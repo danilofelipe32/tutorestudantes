@@ -22,15 +22,15 @@ interface SubjectDetailProps {
 const SubjectDetail: React.FC<SubjectDetailProps> = ({ subject, onBack, onNavigateTo }) => {
 
     const features = [
-        { name: 'Iniciar Exercícios', icon: BookOpenIcon, screen: Screen.EXERCISE },
-        { name: 'Tutor IA (Chat)', icon: ChatBubbleLeftRightIcon, screen: Screen.TUTOR_CHAT },
-        { name: 'Tutor IA (Voz)', icon: SparklesIcon, screen: Screen.LIVE_TUTOR },
-        { name: 'Sessão de Estudo', icon: ClockIcon, screen: Screen.STUDY_SESSION },
-        { name: 'Tópicos de Estudo', icon: Squares2X2Icon, screen: Screen.STUDY_TOPICS },
-        { name: 'Flashcards', icon: RectangleStackIcon, screen: Screen.FLASHCARDS },
-        { name: 'Histórico de Exercícios', icon: DocumentTextIcon, screen: Screen.EXERCISE_HISTORY },
-        { name: 'Histórico de Conversas', icon: ChatBubbleLeftRightIcon, screen: Screen.CHAT_HISTORY },
-        { name: 'Recursos Cognitivos', icon: CpuChipIcon, screen: Screen.COGNITIVE_FEATURES },
+        { name: 'Iniciar Exercícios', icon: BookOpenIcon, screen: Screen.EXERCISE, bgColor: 'bg-red-50', iconColor: 'text-red-500', textColor: 'text-red-900' },
+        { name: 'Tutor IA (Chat)', icon: ChatBubbleLeftRightIcon, screen: Screen.TUTOR_CHAT, bgColor: 'bg-blue-50', iconColor: 'text-blue-500', textColor: 'text-blue-900' },
+        { name: 'Tutor IA (Voz)', icon: SparklesIcon, screen: Screen.LIVE_TUTOR, bgColor: 'bg-purple-50', iconColor: 'text-purple-500', textColor: 'text-purple-900' },
+        { name: 'Sessão de Estudo', icon: ClockIcon, screen: Screen.STUDY_SESSION, bgColor: 'bg-amber-50', iconColor: 'text-amber-500', textColor: 'text-amber-900' },
+        { name: 'Tópicos de Estudo', icon: Squares2X2Icon, screen: Screen.STUDY_TOPICS, bgColor: 'bg-teal-50', iconColor: 'text-teal-500', textColor: 'text-teal-900' },
+        { name: 'Flashcards', icon: RectangleStackIcon, screen: Screen.FLASHCARDS, bgColor: 'bg-green-50', iconColor: 'text-green-500', textColor: 'text-green-900' },
+        { name: 'Histórico de Exercícios', icon: DocumentTextIcon, screen: Screen.EXERCISE_HISTORY, bgColor: 'bg-sky-50', iconColor: 'text-sky-500', textColor: 'text-sky-900' },
+        { name: 'Histórico de Conversas', icon: ChatBubbleLeftRightIcon, screen: Screen.CHAT_HISTORY, bgColor: 'bg-indigo-50', iconColor: 'text-indigo-500', textColor: 'text-indigo-900' },
+        { name: 'Recursos Cognitivos', icon: CpuChipIcon, screen: Screen.COGNITIVE_FEATURES, bgColor: 'bg-rose-50', iconColor: 'text-rose-500', textColor: 'text-rose-900' },
     ];
     
   return (
@@ -54,18 +54,15 @@ const SubjectDetail: React.FC<SubjectDetailProps> = ({ subject, onBack, onNaviga
 
       <main className="flex-grow p-4 overflow-y-auto">
         <div className="grid grid-cols-2 gap-4">
-            {features.map((feature) => (
+            {features.map((feature, index) => (
                 <button 
                     key={feature.name}
                     onClick={() => onNavigateTo(feature.screen)}
-                    className="p-4 bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow border border-gray-100 text-left flex flex-col justify-between aspect-square"
+                    className={`p-4 rounded-2xl flex flex-col items-center justify-center text-center transition-transform transform hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 aspect-square animate-fade-in-up ${feature.bgColor}`}
+                    style={{ animationDelay: `${index * 50}ms` }}
                 >
-                  <div>
-                    <div className={`p-2 rounded-full w-min mb-4 ${subject.color}/10`}>
-                        <feature.icon className={`h-6 w-6 ${subject.color.replace('bg-', 'text-')}`} />
-                    </div>
-                    <span className="font-semibold text-gray-800">{feature.name}</span>
-                  </div>
+                  <feature.icon className={`h-8 w-8 mb-3 ${feature.iconColor}`} />
+                  <span className={`font-semibold text-sm ${feature.textColor}`}>{feature.name}</span>
                 </button>
             ))}
         </div>
