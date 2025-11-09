@@ -10,6 +10,7 @@ export enum Screen {
   LIVE_TUTOR,
   EXERCISE_HISTORY,
   COGNITIVE_FEATURES,
+  STUDY_TOPICS,
 }
 
 export interface Subject {
@@ -39,3 +40,9 @@ export interface ExerciseQuestion {
 }
 
 export type Difficulty = 'Fácil' | 'Médio' | 'Difícil';
+
+export interface StudyTopic {
+  id: string;
+  text: string;
+  isCompleted: boolean;
+}

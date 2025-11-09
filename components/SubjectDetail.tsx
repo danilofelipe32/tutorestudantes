@@ -1,10 +1,11 @@
 
+
 import React, {useState, useEffect} from 'react';
 import type { Subject } from '../types';
 import { Screen } from '../types';
 import { getChatHistoryForSubject } from '../services/chatHistoryService';
 import { getExerciseHistoryForSubject } from '../services/exerciseHistoryService';
-import { ArrowLeftIcon, ChatBubbleIcon, PencilIcon, InfoIcon, ChevronRightIcon, ClockIcon, ArchiveBoxIcon, MicrophoneIcon, ClipboardCheckIcon, CogIcon } from './Icons';
+import { ArrowLeftIcon, ChatBubbleIcon, PencilIcon, InfoIcon, ChevronRightIcon, ClockIcon, ArchiveBoxIcon, MicrophoneIcon, ClipboardCheckIcon, CogIcon, ClipboardDocumentListIcon } from './Icons';
 
 interface SubjectDetailProps {
   subject: Subject;
@@ -72,6 +73,14 @@ const SubjectDetail: React.FC<SubjectDetailProps> = ({ subject, onNavigateTo, on
       iconBg: 'bg-red-500',
       title: 'Conversar por Voz',
       subtitle: 'Interaja com o tutor em tempo real',
+      show: true
+    },
+    {
+      screen: Screen.STUDY_TOPICS,
+      icon: ClipboardDocumentListIcon,
+      iconBg: 'bg-yellow-500',
+      title: 'Tópicos de Estudo',
+      subtitle: 'Organize seu plano de aprendizado',
       show: true
     },
     {

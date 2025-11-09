@@ -1,6 +1,7 @@
 
 
 
+
 import React, { useState, useCallback, useEffect } from 'react';
 import type { Subject } from './types';
 import { Screen } from './types';
@@ -13,6 +14,7 @@ import ChatHistory from './components/ChatHistory';
 import LiveTutor from './components/LiveTutor';
 import ExerciseHistory from './components/ExerciseHistory';
 import CognitiveFeatures from './components/CognitiveFeatures';
+import StudyTopics from './components/StudyTopics';
 import { setupNotificationChecks } from './services/notificationService';
 
 const App: React.FC = () => {
@@ -42,13 +44,24 @@ const App: React.FC = () => {
   }, []);
 
   const handleBack = useCallback(() => {
-    if (screen === Screen.TUTOR_CHAT || screen === Screen.EXERCISE || screen === Screen.STUDY_SESSION || screen === Screen.CHAT_HISTORY || screen === Screen.LIVE_TUTOR || screen === Screen.EXERCISE_HISTORY || screen === Screen.COGNITIVE_FEATURES) {
-      setScreen(Screen.SUBJECT_DETAIL);
+    const detailScreens = [
+        Screen.TUTOR_CHAT,
+        Screen.EXERCISE,
+        Screen.STUDY_SESSION,
+        Screen.CHAT_HISTORY,
+        Screen.LIVE_TUTOR,
+        Screen.EXERCISE_HISTORY,
+        Screen.COGNITIVE_FEATURES,
+        Screen.STUDY_TOPICS
+    ];
+
+    if (detailScreens.includes(screen)) {
+        setScreen(Screen.SUBJECT_DETAIL);
     } else if (screen === Screen.SUBJECT_DETAIL) {
-      setScreen(Screen.SUBJECT_LIST);
-      setSelectedSubject(null);
-      setLearningGoal('');
-      setLearningStyle('');
+        setScreen(Screen.SUBJECT_LIST);
+        setSelectedSubject(null);
+        setLearningGoal('');
+        setLearningStyle('');
     }
   }, [screen]);
 
@@ -107,6 +120,11 @@ const App: React.FC = () => {
       case Screen.COGNITIVE_FEATURES:
         if (selectedSubject) {
             return <CognitiveFeatures onBack={handleBack} subjectColor={selectedSubject.color} />;
+        }
+        return <SubjectList onSelectSubject={handleSelectSubject} />; // Fallback
+      case Screen.STUDY_TOPICS:
+        if (selectedSubject) {
+            return <StudyTopics subject={selectedSubject} onBack={handleBack} />;
         }
         return <SubjectList onSelectSubject={handleSelectSubject} />; // Fallback
       default:
