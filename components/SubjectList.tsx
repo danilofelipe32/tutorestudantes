@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useMemo } from 'react';
 import type { Subject } from '../types';
 import { ChevronRightIcon, BellIcon, LightBulbIcon, UserCircleIcon } from './Icons';
@@ -224,13 +225,13 @@ const SubjectList: React.FC<SubjectListProps> = ({ onSelectSubject, onNavigateTo
             {getNotificationButton()}
             <button
               onClick={() => onNavigateTo(Screen.USER_PROFILE)}
-              className="p-1 rounded-full transition-colors hover:bg-gray-200"
+              className="h-10 w-10 rounded-full transition-colors hover:bg-gray-200 overflow-hidden flex-shrink-0"
               aria-label="Ver Perfil"
             >
               {userProfile?.photo ? (
-                <img src={userProfile.photo} alt="Foto do perfil" className="h-8 w-8 rounded-full object-cover" />
+                <img src={userProfile.photo} alt="Foto do perfil" className="h-full w-full object-cover" />
               ) : (
-                <UserCircleIcon className="h-8 w-8 text-gray-500" />
+                <UserCircleIcon className="h-10 w-10 text-gray-500" />
               )}
             </button>
           </div>
