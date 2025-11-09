@@ -33,21 +33,10 @@ export const generateExercise = async (
     const reviewText = isReview ? 'Foque em um tópico que o aluno errou anteriormente ou que é fundamental.' : '';
     const prompt = `
       Crie uma questão de múltipla escolha sobre ${subject.name} para um estudante do ensino médio no Brasil.
+      A questão deve ter 4 opções.
       Nível de dificuldade: ${difficulty}.
       ${reviewText}
-      A questão deve ter 4 opções (a, b, c, d).
-      Formate a resposta EXATAMENTE como o seguinte JSON, sem nenhum texto adicional antes ou depois:
-      {
-        "question": "texto da pergunta",
-        "options": [
-          { "id": "a", "text": "texto da opção a" },
-          { "id": "b", "text": "texto da opção b" },
-          { "id": "c", "text": "texto da opção c" },
-          { "id": "d", "text": "texto da opção d" }
-        ],
-        "correctOptionId": "id da opção correta (a, b, c, ou d)",
-        "explanation": "uma explicação clara e concisa do porquê a resposta está correta, com no máximo 2 frases."
-      }
+      A explicação do porquê a resposta está correta deve ser clara, concisa e ter no máximo 2 frases.
     `;
 
     const response = await ai.models.generateContent({
@@ -55,6 +44,26 @@ export const generateExercise = async (
         contents: [{ parts: [{ text: prompt }] }],
         config: {
           responseMimeType: 'application/json',
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+                question: { type: Type.STRING },
+                options: {
+                    type: Type.ARRAY,
+                    items: {
+                        type: Type.OBJECT,
+                        properties: {
+                            id: { type: Type.STRING, description: "Um identificador único para a opção, ex: 'a', 'b', 'c', 'd'" },
+                            text: { type: Type.STRING, description: "O texto da opção de múltipla escolha." }
+                        },
+                        required: ["id", "text"]
+                    }
+                },
+                correctOptionId: { type: Type.STRING, description: "O 'id' da opção correta." },
+                explanation: { type: Type.STRING, description: "Explicação do porquê a resposta está correta." }
+            },
+            required: ["question", "options", "correctOptionId", "explanation"]
+          }
         }
     });
 
