@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import type { Subject, StudyTopic, Flashcard } from '../types';
 import { getFlashcardsForTopic, saveFlashcard, deleteFlashcard } from '../services/flashcardService';
 import { generateFlashcardsForTopic } from '../services/geminiService';
-import { ArrowLeftIcon, PlusIcon, SparklesIcon, TrashIcon, PenNibIcon, BookOpenIcon, ClockIcon } from './Icons';
+import { ArrowLeftIcon, PlusIcon, SparklesIcon, TrashIcon, PenNibIcon, BookOpenIcon, ChevronLeftIcon, ChevronRightIcon } from './Icons';
 
 interface FlashcardsProps {
   subject: Subject;
@@ -85,7 +85,6 @@ const Flashcards: React.FC<FlashcardsProps> = ({ subject, topic, onBack }) => {
     const handleGenerate = async () => {
         setIsGenerating(true);
         const newCards = await generateFlashcardsForTopic(topic);
-        let currentCards = getFlashcardsForTopic(subject.id, topic.id);
         newCards.forEach(card => saveFlashcard(subject.id, topic.id, card));
         loadFlashcards();
         setIsGenerating(false);
@@ -119,6 +118,22 @@ const Flashcards: React.FC<FlashcardsProps> = ({ subject, topic, onBack }) => {
             setView('summary');
         }
     };
+    
+    const handleNextCard = () => {
+        if (currentIndex < shuffledDeck.length - 1) {
+            setIsFlipped(false);
+            setCurrentIndex(i => i + 1);
+        } else {
+            setView('summary');
+        }
+    };
+
+    const handlePrevCard = () => {
+        if (currentIndex > 0) {
+            setIsFlipped(false);
+            setCurrentIndex(i => i - 1);
+        }
+    };
 
     // Render logic
     const renderContent = () => {
@@ -126,7 +141,7 @@ const Flashcards: React.FC<FlashcardsProps> = ({ subject, topic, onBack }) => {
             case 'study':
                 const card = shuffledDeck[currentIndex];
                 return (
-                    <div className="w-full flex-grow flex flex-col justify-center items-center">
+                    <div className="w-full flex-grow flex flex-col justify-center items-center p-4">
                         <div className="perspective-1000 w-full max-w-sm">
                             <div className="relative w-full h-64 rounded-2xl shadow-lg transition-transform duration-700 transform-style-preserve-3d" style={{ transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)' }} onClick={() => setIsFlipped(f => !f)}>
                                 <div className="absolute w-full h-full backface-hidden flex items-center justify-center p-6 text-center bg-white border-2 border-gray-200 rounded-2xl">
@@ -143,7 +158,24 @@ const Flashcards: React.FC<FlashcardsProps> = ({ subject, topic, onBack }) => {
                                 <button onClick={() => handleSelfAssessment(true)} className="px-6 py-3 rounded-xl font-bold bg-green-100 text-green-700 hover:bg-green-200">Acertei!</button>
                             </div>
                         )}
-                        <p className="mt-4 font-semibold text-gray-500">{currentIndex + 1} / {shuffledDeck.length}</p>
+                        <div className="mt-4 flex items-center justify-between w-full max-w-xs">
+                            <button
+                                onClick={handlePrevCard}
+                                disabled={currentIndex === 0}
+                                className="p-3 rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:opacity-50"
+                                aria-label="Anterior"
+                            >
+                                <ChevronLeftIcon className="h-6 w-6" />
+                            </button>
+                            <p className="font-semibold text-gray-500">{currentIndex + 1} / {shuffledDeck.length}</p>
+                            <button
+                                onClick={handleNextCard}
+                                className="p-3 rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300"
+                                aria-label={currentIndex === shuffledDeck.length - 1 ? 'Ver Resumo' : 'Próximo'}
+                            >
+                                <ChevronRightIcon className="h-6 w-6" />
+                            </button>
+                        </div>
                     </div>
                 );
 
@@ -174,7 +206,7 @@ const Flashcards: React.FC<FlashcardsProps> = ({ subject, topic, onBack }) => {
                 return (
                     <>
                         <div className="p-4 grid grid-cols-2 gap-4">
-                            <button onClick={() => setView('edit')} className="flex items-center justify-center p-4 bg-blue-500 text-white rounded-xl font-semibold hover:bg-blue-600"><PlusIcon className="h-5 w-5 mr-2"/>Novo Card</button>
+                            <button onClick={() => { setEditingCard(null); setView('edit'); }} className="flex items-center justify-center p-4 bg-blue-500 text-white rounded-xl font-semibold hover:bg-blue-600"><PlusIcon className="h-5 w-5 mr-2"/>Novo Card</button>
                             <button onClick={handleGenerate} disabled={isGenerating} className="flex items-center justify-center p-4 bg-purple-500 text-white rounded-xl font-semibold hover:bg-purple-600 disabled:opacity-50"><SparklesIcon className="h-5 w-5 mr-2"/>Gerar (IA)</button>
                         </div>
                         <div className="flex-grow p-4 overflow-y-auto">
@@ -206,7 +238,7 @@ const Flashcards: React.FC<FlashcardsProps> = ({ subject, topic, onBack }) => {
         <div className="flex flex-col h-full bg-gray-50 relative">
             <header className="flex items-center justify-between p-4 bg-white border-b border-gray-200">
                 <div className="flex items-center overflow-hidden">
-                    <button onClick={view === 'list' ? onBack : () => setView('list')} className="mr-2 p-2 rounded-full hover:bg-gray-100 flex-shrink-0">
+                    <button onClick={view === 'list' ? onBack : () => { setIsFlipped(false); setView('list'); }} className="mr-2 p-2 rounded-full hover:bg-gray-100 flex-shrink-0">
                         <ArrowLeftIcon className="h-6 w-6 text-gray-600" />
                     </button>
                     <div className="flex flex-col min-w-0">
