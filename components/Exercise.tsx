@@ -90,20 +90,20 @@ const Exercise: React.FC<ExerciseProps> = ({ subject, onBack }) => {
   const handleSpeak = async (text: string, id: string) => {
     playClickSound();
 
-    // Se o áudio que está tocando for clicado novamente, pare-o.
-    if (playingAudioId === id) {
-      stopAudio();
-      return;
-    }
-  
-    // Se outro áudio estiver tocando, pare-o antes de iniciar o novo.
-    if (playingAudioId) {
-      stopAudio();
-    }
-    
-    // Não permita uma nova busca se uma já estiver em andamento.
+    // 1. Evita múltiplas requisições de áudio simultaneamente.
     if (fetchingAudioId) {
         return;
+    }
+
+    // 2. Se o áudio que está tocando for clicado novamente, a ação é parar a reprodução.
+    if (playingAudioId === id) {
+      stopAudio();
+      return; // Interrompe a execução para não reiniciar o áudio imediatamente.
+    }
+  
+    // 3. Se outro áudio estiver tocando, para o áudio antigo antes de prosseguir.
+    if (playingAudioId) {
+      stopAudio();
     }
   
     try {
