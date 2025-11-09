@@ -4,7 +4,7 @@ import type { Subject } from '../types';
 import { Screen } from '../types';
 import { getChatHistoryForSubject } from '../services/chatHistoryService';
 import { getExerciseHistoryForSubject } from '../services/exerciseHistoryService';
-import { ArrowLeftIcon, ChatBubbleIcon, PencilIcon, InfoIcon, ChevronRightIcon, ClockIcon, ArchiveBoxIcon, MicrophoneIcon, ClipboardCheckIcon } from './Icons';
+import { ArrowLeftIcon, ChatBubbleIcon, PencilIcon, InfoIcon, ChevronRightIcon, ClockIcon, ArchiveBoxIcon, MicrophoneIcon, ClipboardCheckIcon, CogIcon } from './Icons';
 
 interface SubjectDetailProps {
   subject: Subject;
@@ -88,6 +88,14 @@ const SubjectDetail: React.FC<SubjectDetailProps> = ({ subject, onNavigateTo, on
       iconBg: 'bg-green-500',
       title: 'Fazer Exercícios',
       subtitle: 'Pratique com exercícios interativos',
+      show: true
+    },
+     {
+      screen: Screen.COGNITIVE_FEATURES,
+      icon: CogIcon,
+      iconBg: 'bg-gray-500',
+      title: 'Recursos Cognitivos',
+      subtitle: 'Entenda como o app aprende com você',
       show: true
     },
     {

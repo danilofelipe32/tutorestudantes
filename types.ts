@@ -9,6 +9,7 @@ export enum Screen {
   CHAT_HISTORY,
   LIVE_TUTOR,
   EXERCISE_HISTORY,
+  COGNITIVE_FEATURES,
 }
 
 export interface Subject {

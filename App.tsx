@@ -1,5 +1,6 @@
 
 
+
 import React, { useState, useCallback, useEffect } from 'react';
 import type { Subject } from './types';
 import { Screen } from './types';
@@ -11,6 +12,7 @@ import StudySession from './components/StudySession';
 import ChatHistory from './components/ChatHistory';
 import LiveTutor from './components/LiveTutor';
 import ExerciseHistory from './components/ExerciseHistory';
+import CognitiveFeatures from './components/CognitiveFeatures';
 import { setupNotificationChecks } from './services/notificationService';
 
 const App: React.FC = () => {
@@ -40,7 +42,7 @@ const App: React.FC = () => {
   }, []);
 
   const handleBack = useCallback(() => {
-    if (screen === Screen.TUTOR_CHAT || screen === Screen.EXERCISE || screen === Screen.STUDY_SESSION || screen === Screen.CHAT_HISTORY || screen === Screen.LIVE_TUTOR || screen === Screen.EXERCISE_HISTORY) {
+    if (screen === Screen.TUTOR_CHAT || screen === Screen.EXERCISE || screen === Screen.STUDY_SESSION || screen === Screen.CHAT_HISTORY || screen === Screen.LIVE_TUTOR || screen === Screen.EXERCISE_HISTORY || screen === Screen.COGNITIVE_FEATURES) {
       setScreen(Screen.SUBJECT_DETAIL);
     } else if (screen === Screen.SUBJECT_DETAIL) {
       setScreen(Screen.SUBJECT_LIST);
@@ -102,6 +104,11 @@ const App: React.FC = () => {
           return <ExerciseHistory subject={selectedSubject} onBack={handleBack} />;
         }
         return <SubjectList onSelectSubject={handleSelectSubject} />; // Fallback;
+      case Screen.COGNITIVE_FEATURES:
+        if (selectedSubject) {
+            return <CognitiveFeatures onBack={handleBack} subjectColor={selectedSubject.color} />;
+        }
+        return <SubjectList onSelectSubject={handleSelectSubject} />; // Fallback
       default:
         return <SubjectList onSelectSubject={handleSelectSubject} />;
     }
