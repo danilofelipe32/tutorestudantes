@@ -2,11 +2,22 @@ import { GoogleGenAI, type Content, Modality, Type } from "@google/genai";
 import type { Subject, Difficulty, ExerciseQuestion, StudyTopic, Flashcard, Message } from '../types';
 import { offlineExercises } from "../data/offlineExercises";
 
-// FIX: Initialize with API key from environment variables as required.
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+// AVISO: A chave de API está diretamente no código para fins de teste.
+// Em um ambiente de produção, ela deve ser movida para uma variável de ambiente segura.
+const GEMINI_API_KEY = "COLOQUE_SUA_CHAVE_DE_API_DO_GEMINI_AQUI";
+
+// A biblioteca GoogleGenAI precisa de uma string não vazia para inicializar,
+// caso contrário, o aplicativo falhará ao carregar.
+const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
 // Helper to handle API errors and offline mode
 async function safeApiCall<T>(apiCall: () => Promise<T>, fallback: T): Promise<T> {
+  // Se a chave de API for o valor padrão, retorne o fallback para evitar erros.
+  if (GEMINI_API_KEY === "COLOQUE_SUA_CHAVE_DE_API_DO_GEMINI_AQUI") {
+    console.warn("Chave de API do Gemini não configurada. Usando dados de fallback.");
+    return fallback;
+  }
+
   if (!navigator.onLine) {
     console.warn("Offline mode: using fallback.");
     return fallback;

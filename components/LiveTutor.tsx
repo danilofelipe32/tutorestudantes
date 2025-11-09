@@ -108,6 +108,16 @@ const LiveTutor: React.FC<LiveTutorProps> = ({ subject, onBack }) => {
     setCurrentBotTranscription('');
     userTranscriptionRef.current = '';
     botTranscriptionRef.current = '';
+
+    // AVISO: A chave de API está diretamente no código para fins de teste.
+    // Em um ambiente de produção, ela deve ser movida para uma variável de ambiente segura.
+    const GEMINI_API_KEY = "COLOQUE_SUA_CHAVE_DE_API_DO_GEMINI_AQUI";
+
+    if (GEMINI_API_KEY === "COLOQUE_SUA_CHAVE_DE_API_DO_GEMINI_AQUI") {
+      setError("A chave de API do Gemini não foi configurada. A tutoria por voz está desativada.");
+      setStatus('ERROR');
+      return;
+    }
     
     try {
       mediaStreamRef.current = await navigator.mediaDevices.getUserMedia({
@@ -132,8 +142,7 @@ const LiveTutor: React.FC<LiveTutorProps> = ({ subject, onBack }) => {
     outputGainNodeRef.current.connect(outputAudioContextRef.current.destination);
     nextStartTimeRef.current = 0;
     
-    // FIX: The API key must be obtained from the environment variable `process.env.API_KEY`.
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+    const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
     sessionPromiseRef.current = ai.live.connect({
       model: 'gemini-2.5-flash-native-audio-preview-09-2025',
