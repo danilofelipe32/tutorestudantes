@@ -30,7 +30,7 @@ const SubjectCard: React.FC<{
     return (
         <button
             onClick={onClick}
-            className={`w-full p-5 rounded-2xl text-white shadow-md transition-transform hover:scale-105 ${subject.color} relative overflow-hidden animate-fade-in-up`}
+            className={`w-full p-5 rounded-2xl text-white shadow-md transition-transform hover:scale-105 active:scale-95 ${subject.color} relative overflow-hidden animate-fade-in-up`}
             style={style}
         >
             {needsReview && (
