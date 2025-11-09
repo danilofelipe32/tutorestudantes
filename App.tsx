@@ -95,8 +95,15 @@ const App: React.FC = () => {
 
   return (
     <div className="h-screen w-screen bg-gray-100 font-sans antialiased overflow-hidden">
-      <div className="max-w-md mx-auto h-full bg-white shadow-lg relative">
-        {renderScreen()}
+      <div className="max-w-md mx-auto h-full bg-white shadow-lg relative flex flex-col">
+        <main className="flex-1 relative overflow-y-auto">
+          {renderScreen()}
+        </main>
+        <footer className="flex-shrink-0 text-center py-2 px-4 text-xs text-gray-500 border-t border-gray-200 bg-white z-10">
+          <a href="https://wa.me/5584999780963" target="_blank" rel="noopener noreferrer" className="hover:text-gray-700 transition-colors">
+            Produzido por Danilo Arruda
+          </a>
+        </footer>
       </div>
     </div>
   );
