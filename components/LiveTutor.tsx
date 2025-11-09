@@ -4,9 +4,6 @@ import type { Subject } from '../types';
 import { ArrowLeftIcon, MicrophoneIcon, MicrophoneSlashIcon, SpeakerWaveIcon, SpeakerXMarkIcon } from './Icons';
 import { createBlob, decode, decodeAudioData } from '../services/audioUtils';
 
-// FIX: The API key must be obtained from the environment variable `process.env.API_KEY`.
-const ai = new GoogleGenAI({ apiKey: "AIzaSyA8z9gxOEp2usOFToxGQV0z7rWtiya2L9o" });
-
 interface LiveTutorProps {
   subject: Subject;
   onBack: () => void;
@@ -135,6 +132,9 @@ const LiveTutor: React.FC<LiveTutorProps> = ({ subject, onBack }) => {
     outputGainNodeRef.current.connect(outputAudioContextRef.current.destination);
     nextStartTimeRef.current = 0;
     
+    // FIX: The API key must be obtained from the environment variable `process.env.API_KEY`.
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+
     sessionPromiseRef.current = ai.live.connect({
       model: 'gemini-2.5-flash-native-audio-preview-09-2025',
       config: {

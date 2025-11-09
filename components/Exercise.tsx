@@ -1,10 +1,7 @@
-
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import type { Subject, ExerciseQuestion, Difficulty } from '../types';
-import { GoogleGenAI, Modality } from '@google/genai';
 import { decode, decodeAudioData } from '../services/audioUtils';
-import { generateExercise } from '../services/geminiService';
+import { generateExercise, textToSpeech } from '../services/geminiService';
 import { getLearningDataForSubject, updateLearningDataForSubject } from '../services/learningService';
 import { saveExerciseAttempt } from '../services/exerciseHistoryService';
 import { ArrowLeftIcon, QuestionMarkIcon, SpeakerWaveIcon } from './Icons';
@@ -90,18 +87,15 @@ const Exercise: React.FC<ExerciseProps> = ({ subject, onBack }) => {
   const handleSpeak = async (text: string, id: string) => {
     playClickSound();
 
-    // 1. Evita múltiplas requisições de áudio simultaneamente.
     if (fetchingAudioId) {
         return;
     }
 
-    // 2. Se o áudio que está tocando for clicado novamente, a ação é parar a reprodução.
     if (playingAudioId === id) {
       stopAudio();
-      return; // Interrompe a execução para não reiniciar o áudio imediatamente.
+      return;
     }
   
-    // 3. Se outro áudio estiver tocando, para o áudio antigo antes de prosseguir.
     if (playingAudioId) {
       stopAudio();
     }
@@ -109,21 +103,8 @@ const Exercise: React.FC<ExerciseProps> = ({ subject, onBack }) => {
     try {
       setFetchingAudioId(id);
   
-      const ai = new GoogleGenAI({ apiKey: "AIzaSyA8z9gxOEp2usOFToxGQV0z7rWtiya2L9o" });
-      const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash-preview-tts",
-        contents: [{ parts: [{ text }] }],
-        config: {
-          responseModalities: [Modality.AUDIO],
-          speechConfig: {
-            voiceConfig: {
-              prebuiltVoiceConfig: { voiceName: 'Kore' }, // Voz clara e neutra
-            },
-          },
-        },
-      });
-  
-      const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+      // FIX: Use centralized geminiService for TTS, removing hardcoded API key
+      const base64Audio = await textToSpeech(text);
       if (!base64Audio) throw new Error("Nenhum dado de áudio recebido.");
   
       if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
@@ -154,13 +135,13 @@ const Exercise: React.FC<ExerciseProps> = ({ subject, onBack }) => {
   
       source.start();
       audioSourceRef.current = source;
-      setPlayingAudioId(id); // O áudio agora está tocando.
+      setPlayingAudioId(id);
     } catch (e) {
       console.error("Erro ao reproduzir áudio:", e);
       setError("Não foi possível reproduzir o áudio.");
       setPlayingAudioId(null);
     } finally {
-      setFetchingAudioId(null); // A busca terminou (com sucesso ou falha).
+      setFetchingAudioId(null);
     }
   };
 

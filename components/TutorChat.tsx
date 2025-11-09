@@ -1,10 +1,9 @@
-
-
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import type { Subject, Message } from '../types';
 import { getTutorResponse } from '../services/geminiService';
 import { saveChatHistory } from '../services/chatHistoryService';
 import { ArrowLeftIcon, SendIcon } from './Icons';
+import { Content } from '@google/genai';
 
 interface TutorChatProps {
   subject: Subject;
@@ -56,7 +55,7 @@ const TutorChat: React.FC<TutorChatProps> = ({ subject, onBack, learningGoal, le
     setInput('');
     setIsLoading(true);
 
-    const messageHistory = messages.map(msg => ({
+    const messageHistory: Content[] = messages.map(msg => ({
       role: msg.sender === 'user' ? 'user' as const : 'model' as const,
       parts: [{ text: msg.text }]
     }));

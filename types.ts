@@ -1,33 +1,21 @@
-import type { ComponentType } from 'react';
-
-export enum Screen {
-  SUBJECT_LIST,
-  SUBJECT_DETAIL,
-  TUTOR_CHAT,
-  EXERCISE,
-  STUDY_SESSION,
-  CHAT_HISTORY,
-  LIVE_TUTOR,
-  EXERCISE_HISTORY,
-  COGNITIVE_FEATURES,
-  STUDY_TOPICS,
-}
+import type React from 'react';
 
 export interface Subject {
   id: string;
   name: string;
   description: string;
   color: string;
-  // FIX: Use imported ComponentType
-  icon: ComponentType<{ className?: string }>;
+  icon: React.FC<{ className?: string }>;
 }
 
 export interface Message {
-  id:string;
+  id: string;
   text: string;
   sender: 'user' | 'bot';
   isTyping?: boolean;
 }
+
+export type Difficulty = 'Fácil' | 'Médio' | 'Difícil';
 
 export interface ExerciseQuestion {
   question: string;
@@ -39,10 +27,29 @@ export interface ExerciseQuestion {
   explanation: string;
 }
 
-export type Difficulty = 'Fácil' | 'Médio' | 'Difícil';
+export enum Screen {
+  SUBJECT_LIST,
+  SUBJECT_DETAIL,
+  EXERCISE,
+  TUTOR_CHAT,
+  STUDY_SESSION,
+  CHAT_HISTORY,
+  EXERCISE_HISTORY,
+  LIVE_TUTOR,
+  STUDY_TOPICS,
+  FLASHCARDS,
+  COGNITIVE_FEATURES
+}
 
 export interface StudyTopic {
   id: string;
-  text: string;
-  isCompleted: boolean;
+  title: string;
+  completed: boolean;
+  summary?: string;
+}
+
+export interface Flashcard {
+  id: string;
+  question: string;
+  answer: string;
 }
