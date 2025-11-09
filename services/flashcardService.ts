@@ -47,7 +47,7 @@ export const saveFlashcard = (subjectId: string, topicId: string, flashcard: Fla
   if (existingIndex > -1) {
     allData[subjectId][topicId][existingIndex] = flashcard;
   } else {
-    allData[subjectId][topicId].push(flashcard);
+    allData[subjectId][topicId].unshift(flashcard);
   }
   saveAllFlashcardData(allData);
 };

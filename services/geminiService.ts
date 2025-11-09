@@ -2,19 +2,16 @@ import { GoogleGenAI, type Content, Modality, Type } from "@google/genai";
 import type { Subject, Difficulty, ExerciseQuestion, StudyTopic, Flashcard, Message } from '../types';
 import { offlineExercises } from "../data/offlineExercises";
 
-// AVISO: A chave de API foi movida para variáveis de ambiente (`process.env.API_KEY`) por segurança.
+// AVISO: A chave de API está sendo mantida no código para fins de teste, conforme solicitado.
 // Em um ambiente de produção, ela deve ser movida para uma variável de ambiente segura.
+const API_KEY = "AIzaSyA8z9gxOEp2usOFToxGQV0z7rWtiya2L9o";
 
-// A biblioteca GoogleGenAI é inicializada com a chave de API do ambiente.
-// FIX: Initialize with process.env.API_KEY and provide a fallback for the constructor.
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || "" });
+const ai = new GoogleGenAI({ apiKey: API_KEY });
 
 // Helper to handle API errors and offline mode
 async function safeApiCall<T>(apiCall: () => Promise<T>, fallback: T): Promise<T> {
   // Se a chave de API não estiver configurada, retorne o fallback para evitar erros.
-  // FIX: This check now correctly verifies if the API key is missing.
-  // The original comparison was between two different string literals and would always be false.
-  if (!process.env.API_KEY) {
+  if (!API_KEY) {
     console.warn("Chave de API do Gemini não configurada. Usando dados de fallback.");
     return fallback;
   }
@@ -169,7 +166,6 @@ export const generateStudyTopics = async (subject: Subject): Promise<StudyTopic[
             }
         });
         const result = JSON.parse(response.text.trim()) as { title: string }[];
-        // FIX: Explicitly type the returned object to conform to StudyTopic interface, resolving a type inference mismatch.
         return result.map((item, index): StudyTopic => ({
             id: `${Date.now()}-${index}`,
             title: item.title,

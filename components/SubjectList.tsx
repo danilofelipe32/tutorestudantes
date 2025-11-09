@@ -1,14 +1,18 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import type { Subject } from '../types';
-import { ChevronRightIcon, BellIcon, LightBulbIcon } from './Icons';
+import { ChevronRightIcon, BellIcon, LightBulbIcon, UserCircleIcon } from './Icons';
 import { getAllLearningData, SubjectLearningData } from '../services/learningService';
 import { subjects } from '../data/subjects';
 import { requestNotificationPermission } from '../services/notificationService';
 import { getDailyTip } from '../services/geminiService';
+import type { UserProfile } from '../types';
+import { Screen } from '../types';
+import { getUserProfile } from '../services/profileService';
 
 interface SubjectListProps {
   onSelectSubject: (subject: Subject) => void;
+  onNavigateTo: (screen: Screen) => void;
 }
 
 const SubjectCard: React.FC<{
@@ -63,7 +67,7 @@ const SubjectCard: React.FC<{
 };
 
 
-const SubjectList: React.FC<SubjectListProps> = ({ onSelectSubject }) => {
+const SubjectList: React.FC<SubjectListProps> = ({ onSelectSubject, onNavigateTo }) => {
   const [learningData, setLearningData] = useState<Record<string, SubjectLearningData>>({});
   const [reviewSubjects, setReviewSubjects] = useState<Subject[]>([]);
   const [otherSubjects, setOtherSubjects] = useState<Subject[]>([]);
@@ -71,13 +75,15 @@ const SubjectList: React.FC<SubjectListProps> = ({ onSelectSubject }) => {
   const [suggestion, setSuggestion] = useState<{ subject: Subject; reason: string; cta: string } | null>(null);
   const [dailyTip, setDailyTip] = useState<string | null>(null);
   const [isLoadingTip, setIsLoadingTip] = useState(true);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
 
 
   useEffect(() => {
     if ('Notification' in window) {
       setPermission(Notification.permission);
     }
-
+    
+    setUserProfile(getUserProfile());
     const data = getAllLearningData();
     setLearningData(data);
 
@@ -210,11 +216,24 @@ const SubjectList: React.FC<SubjectListProps> = ({ onSelectSubject }) => {
         <div className="flex justify-between items-start">
           <div>
             <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-800">
-              Olá, Estudante! <span role="img" aria-label="waving hand">👋</span>
+              Olá, {userProfile?.name ? userProfile.name.split(' ')[0] : 'Estudante'}! <span role="img" aria-label="waving hand">👋</span>
             </h1>
             <p className="text-gray-500 mt-2">Escolha uma matéria para começar a estudar</p>
           </div>
-          {getNotificationButton()}
+          <div className="flex items-center space-x-2">
+            {getNotificationButton()}
+            <button
+              onClick={() => onNavigateTo(Screen.USER_PROFILE)}
+              className="p-1 rounded-full transition-colors hover:bg-gray-200"
+              aria-label="Ver Perfil"
+            >
+              {userProfile?.photo ? (
+                <img src={userProfile.photo} alt="Foto do perfil" className="h-8 w-8 rounded-full object-cover" />
+              ) : (
+                <UserCircleIcon className="h-8 w-8 text-gray-500" />
+              )}
+            </button>
+          </div>
         </div>
       </header>
       <main className="flex-grow overflow-y-auto pb-4">

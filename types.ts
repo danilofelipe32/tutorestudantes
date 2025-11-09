@@ -27,6 +27,13 @@ export interface ExerciseQuestion {
   explanation: string;
 }
 
+export interface UserProfile {
+  name: string;
+  photo: string; // Base64 encoded image
+  dob: string;   // ISO date string (e.g., "YYYY-MM-DD")
+  grade: string; // e.g., "1º Ano - Ensino Médio"
+}
+
 export enum Screen {
   SUBJECT_LIST,
   SUBJECT_DETAIL,
@@ -38,7 +45,8 @@ export enum Screen {
   LIVE_TUTOR,
   STUDY_TOPICS,
   FLASHCARDS,
-  COGNITIVE_FEATURES
+  COGNITIVE_FEATURES,
+  USER_PROFILE
 }
 
 export interface StudyTopic {

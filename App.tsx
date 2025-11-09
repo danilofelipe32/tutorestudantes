@@ -12,6 +12,7 @@ import LiveTutor from './components/LiveTutor';
 import StudyTopics from './components/StudyTopics';
 import Flashcards from './components/Flashcards';
 import CognitiveFeatures from './components/CognitiveFeatures';
+import UserProfile from './components/UserProfile';
 import { setupNotificationChecks } from './services/notificationService';
 
 const App: React.FC = () => {
@@ -42,19 +43,28 @@ const App: React.FC = () => {
     } else if (screen === Screen.SUBJECT_DETAIL) {
       setScreen(Screen.SUBJECT_LIST);
       setSelectedSubject(null);
+    } else if (screen === Screen.USER_PROFILE) {
+      setScreen(Screen.SUBJECT_LIST);
     } else if (screen !== Screen.SUBJECT_LIST) {
       setScreen(Screen.SUBJECT_DETAIL);
     }
   };
 
   const renderScreen = () => {
+    // Telas que não precisam de uma matéria selecionada
+    if (screen === Screen.SUBJECT_LIST) {
+      return <SubjectList onSelectSubject={handleSelectSubject} onNavigateTo={handleNavigateTo} />;
+    }
+    if (screen === Screen.USER_PROFILE) {
+      return <UserProfile onBack={handleBack} />;
+    }
+
+    // A partir daqui, todas as telas precisam de uma matéria. Se não houver, volta para a lista.
     if (!selectedSubject) {
-        return <SubjectList onSelectSubject={handleSelectSubject} />;
+      return <SubjectList onSelectSubject={handleSelectSubject} onNavigateTo={handleNavigateTo} />;
     }
     
     switch (screen) {
-      case Screen.SUBJECT_LIST:
-        return <SubjectList onSelectSubject={handleSelectSubject} />;
       case Screen.SUBJECT_DETAIL:
         return <SubjectDetail subject={selectedSubject} onBack={handleBack} onNavigateTo={handleNavigateTo} />;
       case Screen.EXERCISE:
@@ -73,14 +83,13 @@ const App: React.FC = () => {
           return <StudyTopics subject={selectedSubject} onBack={handleBack} onNavigateTo={handleNavigateTo}/>;
       case Screen.FLASHCARDS:
           if (!selectedTopic) {
-            // Fallback if no topic is selected, though UI should prevent this.
             return <StudyTopics subject={selectedSubject} onBack={handleBack} onNavigateTo={handleNavigateTo}/>;
           }
           return <Flashcards subject={selectedSubject} topic={selectedTopic} onBack={handleBack} />;
       case Screen.COGNITIVE_FEATURES:
           return <CognitiveFeatures subjectColor={selectedSubject.color} onBack={handleBack} />;
       default:
-        return <SubjectList onSelectSubject={handleSelectSubject} />;
+        return <SubjectList onSelectSubject={handleSelectSubject} onNavigateTo={handleNavigateTo} />;
     }
   };
 
